@@ -2,7 +2,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma/client" // Adicione /client no final para organizar melhor
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -26,6 +26,7 @@ model Transaction {
   title     String
   amount    Float
   type      String
+  date      DateTime @default(now())
   createdAt DateTime @default(now())
 
   // Aqui criamos a ponte! 

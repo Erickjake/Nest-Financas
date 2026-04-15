@@ -1,5 +1,5 @@
 // src/transactions/transactions.service.ts
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateTransactionDto } from "./dto/transaction.dto";
 
@@ -12,20 +12,31 @@ export class TransactionsService {
   async findAll() {
     return this.prisma.transaction.findMany({
       include: {
-        user: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+            // Ao NÃO listar o 'password' aqui, ele fica de fora!
+          },
+        },
       },
     });
   }
 
   // Cria a transação direto no banco de dados
   // Inverta aqui: userId primeiro, dto depois
-  async create(userId: string, dto: CreateTransactionDto) {
+  async create(userId: number, dto: CreateTransactionDto) {
     return this.prisma.transaction.create({
       data: {
-        title: dto.description,
+        title: dto.title,
         amount: dto.amount,
         type: dto.type,
-        userId: Number(userId),
+        date: dto.date ? new Date(dto.date) : new Date(),
+        user: {
+          connect: { id: userId },
+        },
       },
     });
   }
