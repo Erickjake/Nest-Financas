@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Post, Request } from "@nestjs/common";
 import { TransactionsService } from "./transactions.service";
+import { CreateTransactionDto } from "./dto/transaction.dto";
 
 // O '@Controller' define que a URL para acessar isso será algo como http://localhost:3000/transactions
 @Controller("transactions")
@@ -15,13 +16,10 @@ export class TransactionsController {
 
   // O '@Post()' indica que se o usuário enviar dados para a URL, este método será chamado
   @Post()
-  createTransaction(
-    // O '@Body()' extrai as informações que o usuário enviou no "corpo" da requisição
-    @Body("title") title: string,
-    @Body("amount") amount: number,
-    @Body("type") type: "income" | "expense",
-    @Body("userId") userId: number,
-  ) {
-    return this.transactionsService.create(title, amount, type, userId); // Manda o serviço criar a transação
+  async create(@Body() dto: CreateTransactionDto, @Request() req) {
+    const userId = req.user.sub; // Supondo que o ID venha daqui
+
+    // A ordem deve ser IDENTICA ao que está no Service
+    return this.transactionsService.create(userId, dto);
   }
 }

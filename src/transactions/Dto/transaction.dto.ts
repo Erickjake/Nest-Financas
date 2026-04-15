@@ -28,20 +28,20 @@ export class CreateTransactionDto {
     message: "O valor da transação deve ser estritamente positivo",
   })
   @IsNotEmpty({ message: "O valor é obrigatório" })
-  amount: number;
+  amount!: number;
 
   @IsEnum(TransactionType, {
     message: "O tipo deve ser INCOME, EXPENSE ou TRANSFER",
   })
   @IsNotEmpty({ message: "O tipo de transação é obrigatório" })
-  type: TransactionType;
+  type!: TransactionType;
 
   @IsString()
   @IsNotEmpty({ message: "A descrição é obrigatória" })
   @MaxLength(255, {
     message: "A descrição não pode ter mais de 255 caracteres",
   })
-  description: string;
+  description!: string;
 
   // Campos Opcionais abaixo
 
