@@ -8,5 +8,39 @@ Content-Type: application/json
 {
   "amount": 2500.00,
   "type": "INCOME",
-  "description": "Salário Mensal"
+  "title": "Salário Mensal"
+}
+
+### Login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "123456"
+}
+
+### Logout
+POST http://localhost:3000/auth/logout
+
+### Criar Usuário
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "123456",
+  "name": "User Name"
+}
+
+### Listar Usuários
+GET http://localhost:3000/users
+
+
+### Listar Transações
+GET http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "userId": 1
 }

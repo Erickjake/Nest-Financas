@@ -39,9 +39,9 @@ export class CreateTransactionDto {
   @IsString()
   @IsNotEmpty({ message: "A descrição é obrigatória" })
   @MaxLength(255, {
-    message: "A descrição não pode ter mais de 255 caracteres",
+    message: "A título não pode ter mais de 255 caracteres",
   })
-  description!: string;
+  title!: string;
 
   // Campos Opcionais abaixo
 
