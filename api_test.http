@@ -1,0 +1,12 @@
+### Listar Transações
+GET http://localhost:3000/transactions
+
+### Criar Transação
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "amount": 2500.00,
+  "type": "INCOME",
+  "description": "Salário Mensal"
+}

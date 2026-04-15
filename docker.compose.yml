@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      target: development # Usa a imagem com as ferramentas de dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - .env

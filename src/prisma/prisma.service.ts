@@ -3,7 +3,7 @@ import "dotenv/config"; // 1. Garante que o NestJS leia a sua DATABASE_URL do ar
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { Pool } from "pg"; // Importa o motor de conexão real do PostgreSQL
 import { PrismaPg } from "@prisma/adapter-pg"; // Importa o adaptador oficial do Prisma
-import { PrismaClient } from "generated/prisma/client";
+import { PrismaClient } from "../../generated/prisma/client";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {

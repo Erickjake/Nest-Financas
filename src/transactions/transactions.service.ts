@@ -1,6 +1,7 @@
 // src/transactions/transactions.service.ts
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateTransactionDto } from "./dto/transaction.dto";
 
 @Injectable()
 export class TransactionsService {
@@ -17,15 +18,14 @@ export class TransactionsService {
   }
 
   // Cria a transação direto no banco de dados
-  async create(title: string, amount: number, type: string, userId: number) {
+  // Inverta aqui: userId primeiro, dto depois
+  async create(userId: string, dto: CreateTransactionDto) {
     return this.prisma.transaction.create({
       data: {
-        title: title,
-        amount: amount,
-        type: type,
-        userId: userId,
-        // Note que não precisamos passar o 'id' nem o 'date/createdAt',
-        // o banco de dados Neon cuida disso sozinho agora!
+        title: dto.description,
+        amount: dto.amount,
+        type: dto.type,
+        userId: Number(userId),
       },
     });
   }
