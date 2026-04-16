@@ -1,0 +1,39 @@
+name: CI - Validação (Biome & Vitest)
+
+# 1. Quando esse robô deve rodar?
+on:
+    push:
+        branches: ["main", "master"]
+    pull_request:
+        branches: ["main", "master"]
+
+# 2. O que ele deve fazer?
+jobs:
+    build-and-test:
+        name: Build e Testes
+        runs-on: ubuntu-latest # O sistema operacional do robô
+
+        steps:
+            - name: 📥 Clonar o repositório
+              uses: actions/checkout@v4
+
+            - name: ⚙️ Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20" # Mesma versão do seu Dockerfile
+                  cache: "npm" # Deixa a instalação mais rápida nas próximas vezes
+
+            - name: 📦 Instalar dependências
+              run: npm ci
+
+            - name: 🗄️ Gerar cliente do Prisma
+              run: npx prisma generate
+              # Necessário porque seus testes podem depender dos tipos do banco de dados
+
+            - name: 🧹 Checagem de código (Biome)
+              run: npx @biomejs/biome ci .
+              # O "ci" diz ao Biome: não tente consertar, apenas aponte o erro e trave a esteira se houver.
+
+            - name: 🧪 Rodar testes (Vitest)
+              run: npx vitest run
+              # O "run" executa os testes uma vez e finaliza (sem ficar em modo "watch" aguardando)
