@@ -1,14 +1,14 @@
 // src/transactions/transactions.service.ts
-import { Injectable } from '@nestjs/common';
-import type { PrismaService } from '../../prisma/prisma.service';
-import type { CreateTransactionDto } from './dto/transaction.dto';
+import { Injectable } from "@nestjs/common";
+import type { PrismaService } from "../../prisma/prisma.service";
+import type { CreateTransactionDto } from "./dto/transaction.dto";
 
 @Injectable()
 export class TransactionsService {
   // Injetamos o Prisma, ele substitui a necessidade daquele nosso Array antigo
   constructor(private prisma: PrismaService) {}
 
-  // Busca no banco e já traz os dados do usuário dono da transação
+  // Busca TODAS as transações (use com cuidado - apenas admin ou agregação)
   async findAll() {
     return this.prisma.transaction.findMany({
       include: {
@@ -19,6 +19,23 @@ export class TransactionsService {
             email: true,
             createdAt: true,
             // Ao NÃO listar o 'password' aqui, ele fica de fora!
+          },
+        },
+      },
+    });
+  }
+
+  // Busca transações de um usuário específico (mais seguro)
+  async findAllByUser(userId: number) {
+    return this.prisma.transaction.findMany({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
           },
         },
       },

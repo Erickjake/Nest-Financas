@@ -1,7 +1,8 @@
 // src/users/users.service.spec.ts
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UsersService } from "../users.service";
-import type { PrismaService } from "../../../prisma/prisma.service";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { PrismaService } from '../../../prisma/prisma.service';
+import { UsersService } from '../users.service';
+
 // (O caminho dos '../' pode variar levemente dependendo de onde está sua pasta prisma)
 
 // 1. Criamos o nosso "Dublê" (Mock) do banco de dados
@@ -11,7 +12,7 @@ const prismaMock = {
   },
 };
 
-describe("UsersService", () => {
+describe('UsersService', () => {
   let usersService: UsersService;
 
   // 2. Antes de cada teste, "limpamos" o ambiente e instanciamos o Service
@@ -21,12 +22,12 @@ describe("UsersService", () => {
     usersService = new UsersService(prismaMock as unknown as PrismaService);
   });
 
-  describe("findByEmail()", () => {
+  describe('findByEmail()', () => {
     // TESTE 1: Caminho feliz (quando dá tudo certo)
-    it("deve retornar um usuário quando o email existir (Caminho Feliz)", async () => {
+    it('deve retornar um usuário quando o email existir (Caminho Feliz)', async () => {
       // --- ARRANGE (Preparar) ---
-      const emailTest = "teste@email.com";
-      const usuarioFalso = { id: 1, name: "João", email: emailTest };
+      const emailTest = 'teste@email.com';
+      const usuarioFalso = { id: 1, name: 'João', email: emailTest };
 
       // Ensinamos o nosso dublê: "Quando te chamarem, retorne o usuarioFalso"
       prismaMock.user.findUnique.mockResolvedValue(usuarioFalso);
@@ -45,9 +46,9 @@ describe("UsersService", () => {
 
     // TESTE 2: Caminho triste (quando dá erro)
     // TESTE 2: Caminho triste (quando dá erro)
-    it("deve retornar nulo quando o email não for encontrado", async () => {
+    it('deve retornar nulo quando o email não for encontrado', async () => {
       // --- ARRANGE ---
-      const emailTest = "naoexiste@email.com";
+      const emailTest = 'naoexiste@email.com';
       prismaMock.user.findUnique.mockResolvedValue(null);
 
       // --- ACT ---
@@ -56,9 +57,9 @@ describe("UsersService", () => {
       // --- ASSERT ---
       expect(resultado).toBeNull(); // O Vitest agora espera que a resposta seja null!
     });
-    it("deve retornar nulo quando o email for vazio", async () => {
+    it('deve retornar nulo quando o email for vazio', async () => {
       // --- ARRANGE ---
-      const emailTest = "";
+      const emailTest = '';
 
       prismaMock.user.findUnique.mockResolvedValue(null);
 

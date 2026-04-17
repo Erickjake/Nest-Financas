@@ -36,6 +36,8 @@
         }
       }
     }
+  },
+  "files": {
+    "includes": ["**", "!generated"]
   }
-
 }
