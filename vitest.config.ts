@@ -1,6 +1,7 @@
 import path from "node:path";
 import swc from "unplugin-swc";
 import { defineConfig } from "vitest/config";
+import { playwright } from "@vitest/browser-playwright";
 
 export default defineConfig({
   test: {
@@ -16,5 +17,11 @@ export default defineConfig({
   alias: {
     src: path.resolve(__dirname, "./src"),
     generated: path.resolve(__dirname, "./generated"), // 👈 Adicione isso
+  },
+  browser: {
+    provider: playwright(),
+    enabled: true,
+    // at least one instance is required
+    instances: [{ browser: "chromium" }],
   },
 });

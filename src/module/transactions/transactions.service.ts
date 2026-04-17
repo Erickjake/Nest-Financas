@@ -1,7 +1,7 @@
 // src/transactions/transactions.service.ts
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { CreateTransactionDto } from "./dto/transaction.dto";
+import { Injectable } from '@nestjs/common';
+import type { PrismaService } from '../../prisma/prisma.service';
+import type { CreateTransactionDto } from './dto/transaction.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -37,6 +37,25 @@ export class TransactionsService {
         user: {
           connect: { id: userId },
         },
+      },
+    });
+  }
+  async delete(id: number) {
+    return this.prisma.transaction.delete({ where: { id } });
+  }
+
+  async findOne(id: number) {
+    return this.prisma.transaction.findUnique({ where: { id } });
+  }
+
+  async update(id: number, dto: CreateTransactionDto) {
+    return this.prisma.transaction.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        amount: dto.amount,
+        type: dto.type,
+        date: dto.date ? new Date(dto.date) : new Date(),
       },
     });
   }

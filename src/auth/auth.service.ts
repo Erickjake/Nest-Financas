@@ -1,7 +1,7 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { UsersService } from "../users/users.service";
-import { JwtService } from "@nestjs/jwt";
-import * as bcrypt from "bcrypt";
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import type { UsersService } from '../module/users/users.service';
+import type { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +19,7 @@ export class AuthService {
 
     if (!isMatch) {
       // Se a senha estiver errada, lançamos um erro 401 (Unauthorized)
-      throw new UnauthorizedException("E-mail ou senha inválidos");
+      throw new UnauthorizedException('E-mail ou senha inválidos');
     }
 
     // 3. Prepara o Payload (os dados que vão "viver" dentro do token)

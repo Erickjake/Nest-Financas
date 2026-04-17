@@ -1,7 +1,7 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { PassportStrategy } from "@nestjs/passport";
-import { Strategy } from "passport-jwt";
-import { Request } from "express";
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { Strategy } from 'passport-jwt';
+import type { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -12,7 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         return req?.cookies?.access_token || null;
       },
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || "CHAVE_SUPER_SECRETA",
+      secretOrKey: process.env.JWT_SECRET || 'CHAVE_SUPER_SECRETA',
     });
   }
 
