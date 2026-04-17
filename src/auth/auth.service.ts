@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import type { UsersService } from '../module/users/users.service';
 import type { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import type { UsersService } from '../module/users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -24,8 +24,8 @@ export class AuthService {
 
     // 3. Prepara o Payload (os dados que vão "viver" dentro do token)
     const payload = {
-      sub: user!.id,
-      email: user!.email,
+      sub: user?.id,
+      email: user?.email,
     };
 
     // 4. Retorna o token assinado

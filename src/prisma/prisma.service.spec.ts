@@ -1,6 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { PrismaService } from './prisma.service';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { PrismaService } from './prisma.service';
 
 describe('PrismaService', () => {
   let service: PrismaService;
