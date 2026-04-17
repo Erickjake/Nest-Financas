@@ -9,9 +9,9 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import type { TransactionsService } from './transactions.service';
-import type { CreateTransactionDto } from './dto/transaction.dto';
 import { AuthGuard } from '@nestjs/passport';
+import type { CreateTransactionDto } from './dto/transaction.dto';
+import type { TransactionsService } from './transactions.service';
 
 // O '@Controller' define que a URL para acessar isso será algo como http://localhost:3000/transactions
 @Controller('transactions')

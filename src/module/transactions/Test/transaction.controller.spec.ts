@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
-import { TransactionsController } from "../transactions.controller";
-import { CreateTransactionDto } from "../dto/transaction.dto";
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { TransactionType, type CreateTransactionDto } from '../dto/transaction.dto';
+import { TransactionsController } from '../transactions.controller';
+import type { TransactionsService } from '../transactions.service';
 
 // Criamos um "dublê" do nosso Service.
 // O Controller vai achar que está falando com o service real.
@@ -12,19 +13,21 @@ const mockTransactionsService = {
   delete: vi.fn(),
 };
 
-describe("TransactionsController", () => {
+describe('TransactionsController', () => {
   let controller: TransactionsController;
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Injetamos o mock no controller
-    controller = new TransactionsController(mockTransactionsService as any);
+    controller = new TransactionsController(
+      mockTransactionsService as unknown as TransactionsService,
+    );
   });
 
-  describe("getAllTransactions()", () => {
-    test("deve chamar o findAll do service e retornar os dados", async () => {
+  describe('getAllTransactions()', () => {
+    test('deve chamar o findAll do service e retornar os dados', async () => {
       // --- ARRANGE ---
-      const mockResult = [{ id: 1, title: "Salário", amount: 5000 }];
+      const mockResult = [{ id: 1, title: 'Salário', amount: 5000 }];
       mockTransactionsService.findAll.mockResolvedValue(mockResult);
 
       // --- ACT ---
@@ -36,13 +39,13 @@ describe("TransactionsController", () => {
     });
   });
 
-  describe("create()", () => {
-    test("deve extrair o userId do request e repassar para o service criar a transação", async () => {
+  describe('create()', () => {
+    test('deve extrair o userId do request e repassar para o service criar a transação', async () => {
       // --- ARRANGE ---
       const dto: CreateTransactionDto = {
-        title: "Aluguel",
+        title: 'Aluguel',
         amount: 1500,
-        type: "expense" as any,
+        type: TransactionType.EXPENSE, // Exatamente assim, sem aspas!
         date: new Date().toISOString(),
       };
 
@@ -64,9 +67,9 @@ describe("TransactionsController", () => {
     });
   });
 
-  describe("findOne()", () => {
-    test("deve chamar o findOne do service passando o ID da URL", async () => {
-      const mockResult = { id: 5, title: "Pizza" };
+  describe('findOne()', () => {
+    test('deve chamar o findOne do service passando o ID da URL', async () => {
+      const mockResult = { id: 5, title: 'Pizza' };
       mockTransactionsService.findOne.mockResolvedValue(mockResult);
 
       const result = await controller.findOne(5);
@@ -76,12 +79,12 @@ describe("TransactionsController", () => {
     });
   });
 
-  describe("update()", () => {
-    test("deve repassar o ID e o DTO para o service", async () => {
+  describe('update()', () => {
+    test('deve repassar o ID e o DTO para o service', async () => {
       const dto: CreateTransactionDto = {
-        title: "Pizza (Atualizado)",
+        title: 'Pizza (Atualizado)',
         amount: 60,
-        type: "expense" as any,
+        type: TransactionType.EXPENSE,
         date: new Date().toISOString(),
       };
       const mockResult = { id: 5, ...dto };
@@ -94,9 +97,9 @@ describe("TransactionsController", () => {
     });
   });
 
-  describe("delete()", () => {
-    test("deve repassar o ID para o service deletar", async () => {
-      const mockResult = { id: 5, title: "Pizza" }; // O Prisma costuma retornar o item deletado
+  describe('delete()', () => {
+    test('deve repassar o ID para o service deletar', async () => {
+      const mockResult = { id: 5, title: 'Pizza' }; // O Prisma costuma retornar o item deletado
       mockTransactionsService.delete.mockResolvedValue(mockResult);
 
       const result = await controller.delete(5);

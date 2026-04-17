@@ -1,13 +1,16 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
-import type { AuthService } from './auth.service';
 import type { Response } from 'express';
+import type { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() body: { email: string; password: string },
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const { access_token } = await this.authService.signIn(body.email, body.password);
 
     // 🛡️ Configuramos o cookie seguro
