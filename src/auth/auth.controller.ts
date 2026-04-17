@@ -1,32 +1,29 @@
-import { Body, Controller, Post, Res } from "@nestjs/common";
-import { AuthService } from "./auth.service";
-import { Response } from "express";
+import { Body, Controller, Post, Res } from '@nestjs/common';
+import type { AuthService } from './auth.service';
+import type { Response } from 'express';
 
-@Controller("auth")
+@Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post("login")
+  @Post('login')
   async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {
-    const { access_token } = await this.authService.signIn(
-      body.email,
-      body.password,
-    );
+    const { access_token } = await this.authService.signIn(body.email, body.password);
 
     // 🛡️ Configuramos o cookie seguro
-    res.cookie("access_token", access_token, {
+    res.cookie('access_token', access_token, {
       httpOnly: true, // O JavaScript não consegue ler
-      secure: process.env.NODE_ENV === "production", // Só envia via HTTPS em prod
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === 'production', // Só envia via HTTPS em prod
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24, // 1 dia
     });
 
-    return { message: "Login realizado com sucesso" };
+    return { message: 'Login realizado com sucesso' };
   }
 
-  @Post("logout")
+  @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie("access_token");
-    return { message: "Logout realizado" };
+    res.clearCookie('access_token');
+    return { message: 'Logout realizado' };
   }
 }
