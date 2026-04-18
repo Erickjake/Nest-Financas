@@ -16,7 +16,7 @@ model User {
   email        String        @unique // O @unique garante que ninguém use o mesmo email duas vezes
   password     String
   createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt // Atualizado automaticamente a cada mudança
+  updatedAt    DateTime      @default(now()) @updatedAt // Atualizado automaticamente a cada mudança
   deletedAt    DateTime? // Para soft delete: null = ativo, datetime = deletado
 
   // Aqui dizemos que o usuário possui uma lista de transações (note os colchetes [])
@@ -31,7 +31,7 @@ model Transaction {
   type      String
   date      DateTime @default(now())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt // Atualizado automaticamente a cada mudança
+  updatedAt DateTime @default(now()) @updatedAt // Atualizado automaticamente a cada mudança
   deletedAt DateTime? // Para soft delete: null = ativo, datetime = deletado
 
   // Aqui criamos a ponte! 

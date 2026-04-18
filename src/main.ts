@@ -7,15 +7,18 @@
  *    - Resposta padrão: HTTP 400 Bad Request com mensagens em português
  *    - Implementação: @nestjs/common ValidationPipe com 3 flags de segurança
  */
-import { ValidationPipe } from "@nestjs/common";
-import { NestFactory } from "@nestjs/core";
-import cookieParser from "cookie-parser";
-import { AppModule } from "./app.module";
+import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule, {
-      logger: ["error", "warn", "log", "debug", "verbose"],
+      logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     });
     app.use(cookieParser());
 
@@ -54,9 +57,48 @@ async function bootstrap() {
       }),
     );
 
-    await app.listen(3000, "0.0.0.0");
+    /**
+     * � EXCEPTION FILTER - Tratamento Centralizado de Erros
+     * Padroniza respostas de erro e oculta detalhes sensíveis
+     */
+    app.useGlobalFilters(new AllExceptionsFilter());
+
+    /**
+     * �🛡️ HELMET - Proteção de Headers HTTP
+     * Define headers de segurança automáticos (CSP, X-Frame-Options, etc)
+     */
+    app.use(helmet());
+
+    /**
+     * 🌐 CORS - Controle de Acesso Cruzado
+     * Permite requisições apenas de origens autorizadas
+     */
+    app.enableCors({
+      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+      credentials: true, // Permite envio de cookies
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    });
+
+    /**
+     * 📚 SWAGGER - Documentação Interativa da API
+     * Disponível em http://localhost:3000/api/docs
+     */
+    const config = new DocumentBuilder()
+      .setTitle('Finanças API')
+      .setDescription('API de gerenciamento de transações financeiras pessoais')
+      .setVersion('1.0')
+      .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'access_token')
+      .addTag('auth', 'Autenticação')
+      .addTag('users', 'Gerenciamento de Usuários')
+      .addTag('transactions', 'Gerenciamento de Transações')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+
+    await app.listen(3000, '0.0.0.0');
   } catch (err) {
-    console.error("BOOTSTRAP ERROR:", err);
+    console.error('BOOTSTRAP ERROR:', err);
     process.exit(1);
   }
 }

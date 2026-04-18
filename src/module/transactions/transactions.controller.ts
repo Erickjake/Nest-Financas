@@ -7,13 +7,15 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Request,
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
+import type { PaginationDto } from "../../common/dto/pagination.dto";
 import { OwnershipGuard } from "../../common/guards/ownership.guard";
 import type { CreateTransactionDto } from "./dto/transaction.dto";
-import type { TransactionsService } from "./transactions.service";
+import { TransactionsService } from "./transactions.service";
 
 // O '@Controller' define que a URL para acessar isso será algo como http://localhost:3000/transactions
 @Controller("transactions")
@@ -24,10 +26,10 @@ export class TransactionsController {
   // O '@Get()' indica que se o usuário acessar a URL lendo dados, este método será chamado
   @UseGuards(AuthGuard("jwt"))
   @Get()
-  getAllTransactions(@Request() req) {
-    // Retorna transações do usuário autenticado
+  getAllTransactions(@Request() req, @Query() pagination: PaginationDto) {
+    // Retorna transações do usuário autenticado COM PAGINAÇÃO
     const userId = Number(req.user.userId || req.user.sub);
-    return this.transactionsService.findAllByUser(userId);
+    return this.transactionsService.findAllByUserPaginated(userId, pagination);
   }
 
   // O '@Post()' indica que se o usuário enviar dados para a URL, este método será chamado
@@ -47,7 +49,7 @@ export class TransactionsController {
     const transaction = await this.transactionsService.findOne(id);
 
     // Validação de propriedade
-    if (transaction.userId !== userId) {
+    if (transaction?.userId || transaction?.userId !== userId) {
       throw new ForbiddenException(
         "Você não tem permissão para acessar esta transação",
       );
@@ -67,7 +69,7 @@ export class TransactionsController {
     const transaction = await this.transactionsService.findOne(id);
 
     // Validação de propriedade
-    if (transaction.userId !== userId) {
+    if (transaction?.userId || transaction?.userId !== userId) {
       throw new ForbiddenException(
         "Você não tem permissão para modificar esta transação",
       );
@@ -83,7 +85,7 @@ export class TransactionsController {
     const transaction = await this.transactionsService.findOne(id);
 
     // Validação de propriedade
-    if (transaction.userId !== userId) {
+    if (transaction?.userId || transaction?.userId !== userId) {
       throw new ForbiddenException(
         "Você não tem permissão para deletar esta transação",
       );

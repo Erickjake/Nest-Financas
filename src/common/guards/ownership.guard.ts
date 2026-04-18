@@ -31,11 +31,12 @@
  */
 
 import {
-  CanActivate,
-  ExecutionContext,
+  type CanActivate,
+  type ExecutionContext,
   ForbiddenException,
   Injectable,
-} from "@nestjs/common";
+} from '@nestjs/common';
+import type { TransactionsService } from '../../module/transactions/transactions.service';
 
 /**
  * ✅ OwnershipGuard (básico) - Apenas valida que user está autenticado
@@ -52,7 +53,7 @@ export class OwnershipGuard implements CanActivate {
     const userId = request.user?.id || request.user?.sub;
 
     if (!userId) {
-      throw new ForbiddenException("Usuário não autenticado ou token inválido");
+      throw new ForbiddenException('Usuário não autenticado ou token inválido');
     }
 
     // Armazenar userId na request para uso posterior no controller
@@ -76,7 +77,7 @@ export class OwnershipGuard implements CanActivate {
  */
 @Injectable()
 export class TransactionOwnershipGuard implements CanActivate {
-  constructor(private transactionsService: any) {}
+  constructor(private transactionsService: TransactionsService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -84,27 +85,23 @@ export class TransactionOwnershipGuard implements CanActivate {
     const transactionId = request.params.id;
 
     if (!userId) {
-      throw new ForbiddenException("Usuário não autenticado");
+      throw new ForbiddenException('Usuário não autenticado');
     }
 
     if (!transactionId) {
-      throw new ForbiddenException("ID da transação não fornecido");
+      throw new ForbiddenException('ID da transação não fornecido');
     }
 
     // Buscar transação
-    const transaction = await this.transactionsService.findOne(
-      Number(transactionId),
-    );
+    const transaction = await this.transactionsService.findOne(Number(transactionId));
 
     if (!transaction) {
-      throw new ForbiddenException("Transação não encontrada");
+      throw new ForbiddenException('Transação não encontrada');
     }
 
     // Validar propriedade
     if (transaction.userId !== Number(userId)) {
-      throw new ForbiddenException(
-        "Você não tem permissão para acessar esta transação",
-      );
+      throw new ForbiddenException('Você não tem permissão para acessar esta transação');
     }
 
     // Armazenar transação na request para evitar segunda busca

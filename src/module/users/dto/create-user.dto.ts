@@ -11,13 +11,7 @@
  * Proteções contra: SQLi, weak passwords, injection de campos, type-mismatch
  */
 
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  Matches,
-  MinLength,
-} from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   /**
@@ -30,8 +24,8 @@ export class CreateUserDto {
    * ✅ Válido: "user@example.com", "john.doe@company.co.uk"
    * ❌ Inválido: "user@", "user@.com", "user", "user@domain"
    */
-  @IsEmail({}, { message: "Email inválido" })
-  @IsNotEmpty({ message: "Email é obrigatório" })
+  @IsEmail({}, { message: 'Email inválido' })
+  @IsNotEmpty({ message: 'Email é obrigatório' })
   email!: string;
 
   /**
@@ -45,9 +39,9 @@ export class CreateUserDto {
    * ✅ Válido: "João", "Maria Silva", "José da Silva"
    * ❌ Inválido: "Jo", "", null
    */
-  @IsString({ message: "Nome deve ser texto" })
-  @MinLength(3, { message: "Nome deve ter no mínimo 3 caracteres" })
-  @IsNotEmpty({ message: "Nome é obrigatório" })
+  @IsString({ message: 'Nome deve ser texto' })
+  @MinLength(3, { message: 'Nome deve ter no mínimo 3 caracteres' })
+  @IsNotEmpty({ message: 'Nome é obrigatório' })
   name!: string;
 
   /**
@@ -77,12 +71,12 @@ export class CreateUserDto {
    * - Impede brute force força bruta (força mínima garantida)
    * - Reduz risk de rainbow tables (senhas mais aleatórias)
    * - Cumpre com normativas de segurança governamentais (NIST, PCI-DSS)
-   */\n  @IsString({ message: "Senha deve ser texto" })
-  @MinLength(8, { message: "Senha deve ter no mínimo 8 caracteres" })
+   */
+  @IsString({ message: 'Senha deve ser texto' })
+  @MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-    message:
-      "Senha deve conter pelo menos 1 letra maiúscula, 1 minúscula e 1 número",
+    message: 'Senha deve conter pelo menos 1 letra maiúscula, 1 minúscula e 1 número',
   })
-  @IsNotEmpty({ message: "Senha é obrigatória" })
+  @IsNotEmpty({ message: 'Senha é obrigatória' })
   password!: string;
 }

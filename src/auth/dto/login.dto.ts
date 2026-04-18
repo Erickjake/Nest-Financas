@@ -13,13 +13,7 @@
  * - LoginDto NÃO tem campo de nome, reduzindo superfície de ataque
  */
 
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  Matches,
-  MinLength,
-} from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from 'class-validator';
 
 export class LoginDto {
   /**
@@ -27,8 +21,8 @@ export class LoginDto {
    * Validação: @IsEmail() + @IsNotEmpty()
    * Rejeita: "user@", "user@.com", emails vazios, null
    */
-  @IsEmail({}, { message: "Email inválido" })
-  @IsNotEmpty({ message: "Email é obrigatório" })
+  @IsEmail({}, { message: 'Email inválido' })
+  @IsNotEmpty({ message: 'Email é obrigatório' })
   email!: string;
 
   /**
@@ -42,12 +36,11 @@ export class LoginDto {
    * O hash no DB já foi gerado na criação do usuário (CreateUserDto)
    * Aqui apenas validamos o formato antes de comparar
    */
-  @IsString({ message: "Senha deve ser texto" })
-  @MinLength(8, { message: "Senha deve ter no mínimo 8 caracteres" })
+  @IsString({ message: 'Senha deve ser texto' })
+  @MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-    message:
-      "Senha deve conter pelo menos 1 letra maiúscula, 1 minúscula e 1 número",
+    message: 'Senha deve conter pelo menos 1 letra maiúscula, 1 minúscula e 1 número',
   })
-  @IsNotEmpty({ message: "Senha é obrigatória" })
+  @IsNotEmpty({ message: 'Senha é obrigatória' })
   password!: string;
 }

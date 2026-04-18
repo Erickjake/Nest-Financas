@@ -1,24 +1,20 @@
-import { Injectable } from "@nestjs/common";
-import { ThrottlerGuard } from "@nestjs/throttler";
+import { Injectable } from '@nestjs/common';
+import { ThrottlerGuard, type ThrottlerRequest } from '@nestjs/throttler';
 
-/**
- * LoginThrottleGuard - Rate limiting customizado para login
- * Bem mais restritivo: 3 tentativas por minuto
- * Evita brute force de senhas
- */
 @Injectable()
 export class LoginThrottleGuard extends ThrottlerGuard {
-  async handleRequest(
-    context: any,
-    limit: number,
-    ttl: number,
-  ): Promise<boolean> {
-    // Para POST /auth/login: máx 3 tentativas por 60 segundos
+  protected async handleRequest(requestProps: ThrottlerRequest): Promise<boolean> {
+    const { context } = requestProps;
+
+    // Extrai o request do ExecutionContext para resolver o aviso do "any"
     const request = context.switchToHttp().getRequest();
-    if (request.path === "/auth/login" && request.method === "POST") {
-      limit = 3;
-      ttl = 60;
+
+    if (request.path === '/auth/login' && request.method === 'POST') {
+      requestProps.limit = 3;
+      requestProps.ttl = 60000; // 60 segundos em milissegundos
     }
-    return super.handleRequest(context, limit, ttl);
+
+    // Repassa o objeto atualizado para o método base
+    return super.handleRequest(requestProps);
   }
 }

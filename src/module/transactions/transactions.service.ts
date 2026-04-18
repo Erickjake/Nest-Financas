@@ -15,9 +15,10 @@
  */
 
 // src/transactions/transactions.service.ts
-import { Injectable } from "@nestjs/common";
-import type { PrismaService } from "../../prisma/prisma.service";
-import type { CreateTransactionDto } from "./dto/transaction.dto";
+import { Injectable } from '@nestjs/common';
+import type { PaginatedResponse, PaginationDto } from '../../common/dto/pagination.dto';
+import { PrismaService } from '../../prisma/prisma.service';
+import type { CreateTransactionDto } from './dto/transaction.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -45,6 +46,56 @@ export class TransactionsService {
         },
       },
     });
+  }
+
+  /**
+   * ✅ findAllByUser(userId, pagination) - Com PAGINAÇÃO
+   *
+   * Retorna APENAS transações do usuário específico COM PAGINAÇÃO
+   *
+   * @param userId - ID do usuário autenticado
+   * @param pagination - Objeto com page e limit validados
+   * @returns Transações paginadas com metadados (total, hasNextPage, etc)
+   */
+  async findAllByUserPaginated(
+    userId: number,
+    pagination: PaginationDto,
+  ): Promise<PaginatedResponse<Record<string, unknown>>> {
+    const [transactions, total] = await Promise.all([
+      this.prisma.transaction.findMany({
+        where: { userId },
+        skip: pagination.getSkip(),
+        take: pagination.getLimit(),
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' }, // Mais recentes primeiro
+      }),
+      this.prisma.transaction.count({ where: { userId } }),
+    ]);
+
+    const limit = pagination.getLimit();
+    const page = pagination.page || 1;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: transactions,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   /**

@@ -12,9 +12,9 @@
 
 import { Body, Controller, Post, Res } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
-import type { Response } from "express";
-import { LoginDto } from "./dto/login.dto";
-import type { AuthService } from "./auth.service";
+import { Response } from "express";
+import { AuthService } from "./auth.service";
+import type { LoginDto } from "./dto/login.dto";
 
 @Controller("auth")
 export class AuthController {

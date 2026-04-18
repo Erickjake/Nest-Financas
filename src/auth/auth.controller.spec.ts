@@ -12,11 +12,11 @@
  * - Cookie settings (httpOnly, secure, sameSite)
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthController } from "./auth.controller";
-import type { AuthService } from "./auth.service";
-import type { Response } from "express";
-import { LoginDto } from "./dto/login.dto";
+import type { Response } from 'express';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthController } from './auth.controller';
+import type { AuthService } from './auth.service';
+import type { LoginDto } from './dto/login.dto';
 
 // Mock do AuthService
 const authServiceMock = {
@@ -31,17 +31,15 @@ const responseMock = {
   json: vi.fn().mockReturnThis(),
 };
 
-describe("AuthController", () => {
+describe('AuthController', () => {
   let authController: AuthController;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    authController = new AuthController(
-      authServiceMock as unknown as AuthService,
-    );
+    authController = new AuthController(authServiceMock as unknown as AuthService);
   });
 
-  describe("POST /auth/login", () => {
+  describe('POST /auth/login', () => {
     /**
      * Teste: Login bem-sucedido (HTTP 200)
      * Importante:
@@ -49,48 +47,42 @@ describe("AuthController", () => {
      * - Cookie é definido com token JWT
      * - Cookie tem flags de segurança (httpOnly, secure, sameSite)
      */
-    it("deve fazer login e retornar token com cookie seguro", async () => {
+    it('deve fazer login e retornar token com cookie seguro', async () => {
       // ARRANGE
       const loginDto: LoginDto = {
-        email: "joao@test.com",
-        password: "SecurePass123",
+        email: 'joao@test.com',
+        password: 'SecurePass123',
       };
 
-      const jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOjEsImVtYWlsIjoigbgsbg...";
+      const jwtToken = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOjEsImVtYWlsIjoigbgsbg...';
 
       authServiceMock.signIn.mockResolvedValue({
         access_token: jwtToken,
       });
 
       // ACT
-      const resultado = await authController.login(
-        loginDto,
-        responseMock as unknown as Response,
-      );
+      const resultado = await authController.login(loginDto, responseMock as unknown as Response);
 
       // ASSERT - Resposta
       expect(resultado).toEqual({
-        message: "Login realizado com sucesso",
+        message: 'Login realizado com sucesso',
       });
 
       // ASSERT - AuthService foi chamado com email e password
-      expect(authServiceMock.signIn).toHaveBeenCalledWith(
-        loginDto.email,
-        loginDto.password,
-      );
+      expect(authServiceMock.signIn).toHaveBeenCalledWith(loginDto.email, loginDto.password);
 
       // ASSERT - Cookie foi definido
       expect(responseMock.cookie).toHaveBeenCalled();
 
       // ASSERT - Cookie tem flags de segurança corretas
       const cookieCall = (responseMock.cookie as any).mock.calls[0];
-      expect(cookieCall[0]).toBe("access_token"); // nome do cookie
+      expect(cookieCall[0]).toBe('access_token'); // nome do cookie
       expect(cookieCall[1]).toBe(jwtToken); // valor é o JWT
 
       // ASSERT - Opções de segurança do cookie
       const cookieOptions = cookieCall[2];
       expect(cookieOptions.httpOnly).toBe(true); // Protege contra XSS
-      expect(cookieOptions.sameSite).toBe("lax"); // Protege contra CSRF
+      expect(cookieOptions.sameSite).toBe('lax'); // Protege contra CSRF
       expect(cookieOptions.maxAge).toBe(1000 * 60 * 60 * 24); // 1 dia
       // secure é dinâmico: true em prod, false em dev
     });
@@ -103,30 +95,25 @@ describe("AuthController", () => {
      * Nota: Em teste real, ValidationPipe já teria rejeitado a requisição
      * Aqui testamos o comportamento se credential errada fosse passada
      */
-    it("deve rejeitar request com LoginDto inválido (validado por ValidationPipe)", async () => {
+    it('deve rejeitar request com LoginDto inválido (validado por ValidationPipe)', async () => {
       // ARRANGE
       // LoginDto com email inválido seria rejeitado por ValidationPipe automaticamente
       // Então este teste verifica que o controller nunca é chamado
 
       const loginDtoInvalido = {
-        email: "email_sem_arroba", // Inválido - falta @
-        password: "12345", // Inválido - < 8 caracteres
+        email: 'email_sem_arroba', // Inválido - falta @
+        password: '12345', // Inválido - < 8 caracteres
       } as any;
 
       // Se ValidationPipe passasse isso por algum motivo, AuthService retornaria erro
-      authServiceMock.signIn.mockRejectedValue(
-        new Error("E-mail ou senha inválidos"),
-      );
+      authServiceMock.signIn.mockRejectedValue(new Error('E-mail ou senha inválidos'));
 
       // ACT & ASSERT
       // Na prática, ValidationPipe já teria rejeitado com HTTP 400
       // Aqui testamos que AuthService rejeita também
       await expect(
-        authController.login(
-          loginDtoInvalido,
-          responseMock as unknown as Response,
-        ),
-      ).rejects.toThrow("E-mail ou senha inválidos");
+        authController.login(loginDtoInvalido, responseMock as unknown as Response),
+      ).rejects.toThrow('E-mail ou senha inválidos');
     });
 
     /**
@@ -134,20 +121,20 @@ describe("AuthController", () => {
      * Importante: AuthService lança UnauthorizedException
      * Erro é propagado ao cliente
      */
-    it("deve retornar 401 Unauthorized quando credenciais forem incorretas", async () => {
+    it('deve retornar 401 Unauthorized quando credenciais forem incorretas', async () => {
       // ARRANGE
       const loginDto: LoginDto = {
-        email: "joao@test.com",
-        password: "SenhaErrada123",
+        email: 'joao@test.com',
+        password: 'SenhaErrada123',
       };
 
-      const unauthorizedError = new Error("E-mail ou senha inválidos");
+      const unauthorizedError = new Error('E-mail ou senha inválidos');
       authServiceMock.signIn.mockRejectedValue(unauthorizedError);
 
       // ACT & ASSERT
       await expect(
         authController.login(loginDto, responseMock as unknown as Response),
-      ).rejects.toThrow("E-mail ou senha inválidos");
+      ).rejects.toThrow('E-mail ou senha inválidos');
 
       // Cookie NÃO deve ser definido em caso de erro
       expect(responseMock.cookie).not.toHaveBeenCalled();
@@ -160,15 +147,15 @@ describe("AuthController", () => {
      *
      * Nota: Este teste é simulado. Em teste E2E real, você faria 4+ req seguidas
      */
-    it("deve respeitar rate limit de 3 tentativas por minuto", () => {
+    it('deve respeitar rate limit de 3 tentativas por minuto', () => {
       // ARRANGE
-      const loginDto: LoginDto = {
-        email: "ataque@brute.com",
-        password: "SeAlguémTentarHacking123",
+      const _loginDto: LoginDto = {
+        email: 'ataque@brute.com',
+        password: 'SeAlguémTentarHacking123',
       };
 
       // Resposta esperada após 3 tentativas (4ª chamada)
-      const rateLimitError = new Error("Too Many Requests");
+      const rateLimitError = new Error('Too Many Requests');
 
       // ACT
       // Em teste E2E, você faria:
@@ -187,31 +174,25 @@ describe("AuthController", () => {
      * Teste: Cookie é renovado se login bem-sucedido novamente
      * Importante: Se usuário fizer login novo, novo JWT é gerado
      */
-    it("deve renovar JWT cookie em novo login", async () => {
+    it('deve renovar JWT cookie em novo login', async () => {
       // ARRANGE - Primeiro login
       const loginDto1 = {
-        email: "joao@test.com",
-        password: "SecurePass123",
+        email: 'joao@test.com',
+        password: 'SecurePass123',
       };
 
-      const jwtToken1 = "eyJhbGciOiJIUzI1NiJ9.token1...";
+      const jwtToken1 = 'eyJhbGciOiJIUzI1NiJ9.token1...';
       authServiceMock.signIn.mockResolvedValue({ access_token: jwtToken1 });
 
       // ACT - Primeiro login
-      await authController.login(
-        loginDto1,
-        responseMock as unknown as Response,
-      );
+      await authController.login(loginDto1, responseMock as unknown as Response);
 
       // ARRANGE - Segundo login (novo token)
-      const jwtToken2 = "eyJhbGciOiJIUzI1NiJ9.token2...";
+      const jwtToken2 = 'eyJhbGciOiJIUzI1NiJ9.token2...';
       authServiceMock.signIn.mockResolvedValue({ access_token: jwtToken2 });
 
       // ACT - Segundo login
-      await authController.login(
-        loginDto1,
-        responseMock as unknown as Response,
-      );
+      await authController.login(loginDto1, responseMock as unknown as Response);
 
       // ASSERT - Cookie foi definido 2x (uma por login)
       expect(responseMock.cookie).toHaveBeenCalledTimes(2);
@@ -223,7 +204,7 @@ describe("AuthController", () => {
     });
   });
 
-  describe("POST /auth/logout", () => {
+  describe('POST /auth/logout', () => {
     /**
      * Teste: Logout limpa cookie
      * Importante:
@@ -231,19 +212,17 @@ describe("AuthController", () => {
      * - Retorna { message: "Logout realizado" }
      * - Qualquer pessoa pode fazer logout (sem validação JWT)
      */
-    it("deve fazer logout e limpar cookie access_token", async () => {
+    it('deve fazer logout e limpar cookie access_token', async () => {
       // ACT
-      const resultado = await authController.logout(
-        responseMock as unknown as Response,
-      );
+      const resultado = await authController.logout(responseMock as unknown as Response);
 
       // ASSERT - Resposta
       expect(resultado).toEqual({
-        message: "Logout realizado",
+        message: 'Logout realizado',
       });
 
       // ASSERT - Cookie foi limpado
-      expect(responseMock.clearCookie).toHaveBeenCalledWith("access_token");
+      expect(responseMock.clearCookie).toHaveBeenCalledWith('access_token');
     });
 
     /**
@@ -251,18 +230,16 @@ describe("AuthController", () => {
      * Importante: Não há @UseGuards() em logout
      * Qualquer um (autenticado ou não) pode fazer logout
      */
-    it("deve permitir logout sem validar JWT", async () => {
+    it('deve permitir logout sem validar JWT', async () => {
       // ARRANGE
       // Sem JWT válido seria passado
 
       // ACT
-      const resultado = await authController.logout(
-        responseMock as unknown as Response,
-      );
+      const resultado = await authController.logout(responseMock as unknown as Response);
 
       // ASSERT
       expect(resultado).toEqual({
-        message: "Logout realizado",
+        message: 'Logout realizado',
       });
 
       // ASSERT - clearCookie foi chamado mesmo sem JWT
@@ -273,7 +250,7 @@ describe("AuthController", () => {
      * Teste: Múltiplos logouts limpa cookie todas as vezes
      * Importante: Idempotente - pode-se logout múltiplas vezes
      */
-    it("deve ser idempotente - múltiplos logouts funcionam", async () => {
+    it('deve ser idempotente - múltiplos logouts funcionam', async () => {
       // ACT
       await authController.logout(responseMock as unknown as Response);
       await authController.logout(responseMock as unknown as Response);
