@@ -14,8 +14,11 @@ model User {
   id           Int           @id @default(autoincrement())
   name         String
   email        String        @unique // O @unique garante que ninguém use o mesmo email duas vezes
-  createdAt    DateTime      @default(now())
   password     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt // Atualizado automaticamente a cada mudança
+  deletedAt    DateTime? // Para soft delete: null = ativo, datetime = deletado
+
   // Aqui dizemos que o usuário possui uma lista de transações (note os colchetes [])
   transactions Transaction[]
 }
@@ -28,9 +31,14 @@ model Transaction {
   type      String
   date      DateTime @default(now())
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt // Atualizado automaticamente a cada mudança
+  deletedAt DateTime? // Para soft delete: null = ativo, datetime = deletado
 
   // Aqui criamos a ponte! 
   // Dizemos que existe um 'user' do tipo 'User', e que o campo 'userId' daqui se liga ao campo 'id' de lá.
   user   User @relation(fields: [userId], references: [id])
   userId Int // O número de identificação do dono desta transação
+
+  // 🔍 Índice para otimizar queries filtradas por userId
+  @@index([userId])
 }

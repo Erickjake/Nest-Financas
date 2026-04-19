@@ -2,32 +2,38 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Post,
   Put,
+  Query,
   Request,
   UseGuards,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import type { CreateTransactionDto } from './dto/transaction.dto';
-import type { TransactionsService } from './transactions.service';
+} from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import type { PaginationDto } from "../../common/dto/pagination.dto";
+import { OwnershipGuard } from "../../common/guards/ownership.guard";
+import type { CreateTransactionDto } from "./dto/transaction.dto";
+import { TransactionsService } from "./transactions.service";
 
 // O '@Controller' define que a URL para acessar isso será algo como http://localhost:3000/transactions
-@Controller('transactions')
+@Controller("transactions")
 export class TransactionsController {
   // O construtor "puxa" o nosso serviço para podermos usá-lo aqui dentro
   constructor(private readonly transactionsService: TransactionsService) {}
 
   // O '@Get()' indica que se o usuário acessar a URL lendo dados, este método será chamado
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard("jwt"))
   @Get()
-  getAllTransactions() {
-    return this.transactionsService.findAll(); // Pede ao serviço a lista completa
+  getAllTransactions(@Request() req, @Query() pagination: PaginationDto) {
+    // Retorna transações do usuário autenticado COM PAGINAÇÃO
+    const userId = Number(req.user.userId || req.user.sub);
+    return this.transactionsService.findAllByUserPaginated(userId, pagination);
   }
 
   // O '@Post()' indica que se o usuário enviar dados para a URL, este método será chamado
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard("jwt"))
   @Post()
   async create(@Body() dto: CreateTransactionDto, @Request() req) {
     const userId = Number(req.user.userId || req.user.sub);
@@ -36,19 +42,55 @@ export class TransactionsController {
     return this.transactionsService.create(userId, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.transactionsService.findOne(id);
+  @UseGuards(AuthGuard("jwt"), OwnershipGuard)
+  @Get(":id")
+  async findOne(@Param("id") id: number, @Request() req) {
+    const userId = Number(req.user.userId || req.user.sub);
+    const transaction = await this.transactionsService.findOne(id);
+
+    // Validação de propriedade
+    if (transaction?.userId || transaction?.userId !== userId) {
+      throw new ForbiddenException(
+        "Você não tem permissão para acessar esta transação",
+      );
+    }
+
+    return transaction;
   }
-  @UseGuards(AuthGuard('jwt'))
-  @Put(':id')
-  update(@Param('id') id: number, @Body() dto: CreateTransactionDto) {
+
+  @UseGuards(AuthGuard("jwt"), OwnershipGuard)
+  @Put(":id")
+  async update(
+    @Param("id") id: number,
+    @Body() dto: CreateTransactionDto,
+    @Request() req,
+  ) {
+    const userId = Number(req.user.userId || req.user.sub);
+    const transaction = await this.transactionsService.findOne(id);
+
+    // Validação de propriedade
+    if (transaction?.userId || transaction?.userId !== userId) {
+      throw new ForbiddenException(
+        "Você não tem permissão para modificar esta transação",
+      );
+    }
+
     return this.transactionsService.update(id, dto);
   }
-  @UseGuards(AuthGuard('jwt'))
-  @Delete(':id')
-  delete(@Param('id') id: number) {
+
+  @UseGuards(AuthGuard("jwt"), OwnershipGuard)
+  @Delete(":id")
+  async delete(@Param("id") id: number, @Request() req) {
+    const userId = Number(req.user.userId || req.user.sub);
+    const transaction = await this.transactionsService.findOne(id);
+
+    // Validação de propriedade
+    if (transaction?.userId || transaction?.userId !== userId) {
+      throw new ForbiddenException(
+        "Você não tem permissão para deletar esta transação",
+      );
+    }
+
     return this.transactionsService.delete(id);
   }
 }

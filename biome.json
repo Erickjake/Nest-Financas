@@ -33,9 +33,35 @@
           "options": {
             "allow": ["log"]
           }
+        },
+        "noExplicitAny": "warn"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.spec.ts", "**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.service.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useImportType": "off"
+          }
         }
       }
     }
+  ],
+  "files": {
+    "includes": ["src/**", "lib/**", "test/**", "vitest-example/**"],
+    "ignoreUnknown": false
   }
-
 }

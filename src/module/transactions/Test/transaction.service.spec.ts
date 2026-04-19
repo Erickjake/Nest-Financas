@@ -1,12 +1,16 @@
 import type { PrismaService } from 'src/prisma/prisma.service';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { TransactionType, type CreateTransactionDto } from '../dto/transaction.dto';
+import { type CreateTransactionDto, TransactionType } from '../dto/transaction.dto';
 import { TransactionsService } from '../transactions.service';
 
 // O mock agora só precisa do transaction, pois o service não chama o model user diretamente
 const prismaMock = {
   transaction: {
     create: vi.fn(),
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   },
 };
 
@@ -78,6 +82,124 @@ describe('TransactionsService', () => {
 
       // Garante que o Prisma foi chamado (e falhou)
       expect(prismaMock.transaction.create).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('findAllByUser()', () => {
+    test('deve retornar todas as transações de um usuário específico', async () => {
+      // --- ARRANGE ---
+      const userId = 1;
+      const mockTransactions = [
+        { id: 1, title: 'Salário', amount: 5000, userId },
+        { id: 2, title: 'Rent', amount: 1500, userId },
+      ];
+      prismaMock.transaction.findMany.mockResolvedValueOnce(mockTransactions);
+
+      // --- ACT ---
+      const result = await transactionsService.findAllByUser(userId);
+
+      // --- ASSERT ---
+      expect(result).toEqual(mockTransactions);
+      expect(prismaMock.transaction.findMany).toHaveBeenCalledWith({
+        where: { userId },
+        include: expect.any(Object),
+      });
+    });
+  });
+
+  describe('findOne()', () => {
+    test('deve retornar uma transação pelo ID', async () => {
+      // --- ARRANGE ---
+      const transactionId = 1;
+      const mockTransaction = {
+        id: transactionId,
+        title: 'Salário',
+        amount: 5000,
+        userId: 1,
+      };
+      prismaMock.transaction.findUnique.mockResolvedValueOnce(mockTransaction);
+
+      // --- ACT ---
+      const result = await transactionsService.findOne(transactionId);
+
+      // --- ASSERT ---
+      expect(result).toEqual(mockTransaction);
+      expect(prismaMock.transaction.findUnique).toHaveBeenCalledWith({
+        where: { id: transactionId },
+      });
+    });
+
+    test('deve retornar null se transação não existir', async () => {
+      // --- ARRANGE ---
+      prismaMock.transaction.findUnique.mockResolvedValueOnce(null);
+
+      // --- ACT ---
+      const result = await transactionsService.findOne(999);
+
+      // --- ASSERT ---
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('update()', () => {
+    test('deve atualizar uma transação com sucesso', async () => {
+      // --- ARRANGE ---
+      const transactionId = 1;
+      const dto: CreateTransactionDto = {
+        title: 'Salário (Atualizado)',
+        amount: 6000,
+        type: TransactionType.INCOME,
+        date: new Date().toISOString(),
+      };
+      const mockUpdated = { id: transactionId, ...dto, userId: 1 };
+      prismaMock.transaction.update.mockResolvedValueOnce(mockUpdated);
+
+      // --- ACT ---
+      const result = await transactionsService.update(transactionId, dto);
+
+      // --- ASSERT ---
+      expect(result).toEqual(mockUpdated);
+      expect(prismaMock.transaction.update).toHaveBeenCalledWith({
+        where: { id: transactionId },
+        data: {
+          title: dto.title,
+          amount: dto.amount,
+          type: dto.type,
+          date: expect.any(Date),
+        },
+      });
+    });
+  });
+
+  describe('delete()', () => {
+    test('deve deletar uma transação com sucesso', async () => {
+      // --- ARRANGE ---
+      const transactionId = 1;
+      const mockDeleted = {
+        id: transactionId,
+        title: 'Salário',
+        amount: 5000,
+        userId: 1,
+      };
+      prismaMock.transaction.delete.mockResolvedValueOnce(mockDeleted);
+
+      // --- ACT ---
+      const result = await transactionsService.delete(transactionId);
+
+      // --- ASSERT ---
+      expect(result).toEqual(mockDeleted);
+      expect(prismaMock.transaction.delete).toHaveBeenCalledWith({
+        where: { id: transactionId },
+      });
+    });
+
+    test('deve repassar erro se transação não existir', async () => {
+      // --- ARRANGE ---
+      const erroDoPrisma = new Error('Record not found');
+      prismaMock.transaction.delete.mockRejectedValueOnce(erroDoPrisma);
+
+      // --- ACT & ASSERT ---
+      await expect(transactionsService.delete(999)).rejects.toThrow('Record not found');
     });
   });
 });

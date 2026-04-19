@@ -1,5 +1,6 @@
+import { ForbiddenException } from '@nestjs/common';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { TransactionType, type CreateTransactionDto } from '../dto/transaction.dto';
+import { type CreateTransactionDto, TransactionType } from '../dto/transaction.dto';
 import { TransactionsController } from '../transactions.controller';
 import type { TransactionsService } from '../transactions.service';
 
@@ -7,6 +8,7 @@ import type { TransactionsService } from '../transactions.service';
 // O Controller vai achar que está falando com o service real.
 const mockTransactionsService = {
   findAll: vi.fn(),
+  findAllByUser: vi.fn(),
   create: vi.fn(),
   findOne: vi.fn(),
   update: vi.fn(),
@@ -25,17 +27,18 @@ describe('TransactionsController', () => {
   });
 
   describe('getAllTransactions()', () => {
-    test('deve chamar o findAll do service e retornar os dados', async () => {
+    test('deve chamar o findAllByUser do service com userId do JWT', async () => {
       // --- ARRANGE ---
-      const mockResult = [{ id: 1, title: 'Salário', amount: 5000 }];
-      mockTransactionsService.findAll.mockResolvedValue(mockResult);
+      const mockRequest = { user: { sub: 10 } };
+      const mockResult = [{ id: 1, title: 'Salário', amount: 5000, userId: 10 }];
+      mockTransactionsService.findAllByUser.mockResolvedValue(mockResult);
 
       // --- ACT ---
-      const result = await controller.getAllTransactions();
+      const result = await controller.getAllTransactions(mockRequest);
 
       // --- ASSERT ---
       expect(result).toEqual(mockResult);
-      expect(mockTransactionsService.findAll).toHaveBeenCalledTimes(1);
+      expect(mockTransactionsService.findAllByUser).toHaveBeenCalledWith(10);
     });
   });
 
@@ -45,7 +48,7 @@ describe('TransactionsController', () => {
       const dto: CreateTransactionDto = {
         title: 'Aluguel',
         amount: 1500,
-        type: TransactionType.EXPENSE, // Exatamente assim, sem aspas!
+        type: TransactionType.EXPENSE,
         date: new Date().toISOString(),
       };
 
@@ -69,43 +72,139 @@ describe('TransactionsController', () => {
 
   describe('findOne()', () => {
     test('deve chamar o findOne do service passando o ID da URL', async () => {
-      const mockResult = { id: 5, title: 'Pizza' };
+      // --- ARRANGE ---
+      const mockRequest = { user: { sub: 10 } };
+      const mockResult = {
+        id: 5,
+        title: 'Pizza',
+        userId: 10,
+        amount: 50,
+        type: TransactionType.EXPENSE,
+        date: new Date(),
+      };
       mockTransactionsService.findOne.mockResolvedValue(mockResult);
 
-      const result = await controller.findOne(5);
+      // --- ACT ---
+      const result = await controller.findOne(5, mockRequest);
 
+      // --- ASSERT ---
       expect(result).toEqual(mockResult);
       expect(mockTransactionsService.findOne).toHaveBeenCalledWith(5);
+    });
+
+    test('deve lançar ForbiddenException se o usuário não é o proprietário', async () => {
+      // --- ARRANGE ---
+      const mockRequest = { user: { sub: 10 } };
+      const mockResult = {
+        id: 5,
+        title: 'Pizza',
+        userId: 99, // Outro usuário!
+        amount: 50,
+        type: TransactionType.EXPENSE,
+        date: new Date(),
+      };
+      mockTransactionsService.findOne.mockResolvedValue(mockResult);
+
+      // --- ACT & ASSERT ---
+      await expect(controller.findOne(5, mockRequest)).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('update()', () => {
     test('deve repassar o ID e o DTO para o service', async () => {
+      // --- ARRANGE ---
+      const mockRequest = { user: { sub: 10 } };
       const dto: CreateTransactionDto = {
         title: 'Pizza (Atualizado)',
         amount: 60,
         type: TransactionType.EXPENSE,
         date: new Date().toISOString(),
       };
-      const mockResult = { id: 5, ...dto };
+      const mockTransaction = {
+        id: 5,
+        title: 'Pizza',
+        userId: 10,
+        amount: 50,
+        type: TransactionType.EXPENSE,
+        date: new Date(),
+      };
+      const mockResult = { ...mockTransaction, ...dto };
+
+      mockTransactionsService.findOne.mockResolvedValue(mockTransaction);
       mockTransactionsService.update.mockResolvedValue(mockResult);
 
-      const result = await controller.update(5, dto);
+      // --- ACT ---
+      const result = await controller.update(5, dto, mockRequest);
 
+      // --- ASSERT ---
       expect(result).toEqual(mockResult);
       expect(mockTransactionsService.update).toHaveBeenCalledWith(5, dto);
+    });
+
+    test('deve lançar ForbiddenException ao atualizar transação de outro usuário', async () => {
+      // --- ARRANGE ---
+      const mockRequest = { user: { sub: 10 } };
+      const dto: CreateTransactionDto = {
+        title: 'Pizza (Atualizado)',
+        amount: 60,
+        type: TransactionType.EXPENSE,
+        date: new Date().toISOString(),
+      };
+      const mockTransaction = {
+        id: 5,
+        title: 'Pizza',
+        userId: 99, // Outro usuário!
+        amount: 50,
+        type: TransactionType.EXPENSE,
+        date: new Date(),
+      };
+
+      mockTransactionsService.findOne.mockResolvedValue(mockTransaction);
+
+      // --- ACT & ASSERT ---
+      await expect(controller.update(5, dto, mockRequest)).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('delete()', () => {
     test('deve repassar o ID para o service deletar', async () => {
-      const mockResult = { id: 5, title: 'Pizza' }; // O Prisma costuma retornar o item deletado
-      mockTransactionsService.delete.mockResolvedValue(mockResult);
+      // --- ARRANGE ---
+      const mockRequest = { user: { sub: 10 } };
+      const mockTransaction = {
+        id: 5,
+        title: 'Pizza',
+        userId: 10,
+        amount: 50,
+        type: TransactionType.EXPENSE,
+        date: new Date(),
+      };
+      mockTransactionsService.findOne.mockResolvedValue(mockTransaction);
+      mockTransactionsService.delete.mockResolvedValue(mockTransaction);
 
-      const result = await controller.delete(5);
+      // --- ACT ---
+      const result = await controller.delete(5, mockRequest);
 
-      expect(result).toEqual(mockResult);
+      // --- ASSERT ---
+      expect(result).toEqual(mockTransaction);
       expect(mockTransactionsService.delete).toHaveBeenCalledWith(5);
+    });
+
+    test('deve lançar ForbiddenException ao deletar transação de outro usuário', async () => {
+      // --- ARRANGE ---
+      const mockRequest = { user: { sub: 10 } };
+      const mockTransaction = {
+        id: 5,
+        title: 'Pizza',
+        userId: 99, // Outro usuário!
+        amount: 50,
+        type: TransactionType.EXPENSE,
+        date: new Date(),
+      };
+
+      mockTransactionsService.findOne.mockResolvedValue(mockTransaction);
+
+      // --- ACT & ASSERT ---
+      await expect(controller.delete(5, mockRequest)).rejects.toThrow(ForbiddenException);
     });
   });
 });
