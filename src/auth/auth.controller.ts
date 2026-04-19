@@ -10,13 +10,13 @@
  * FLUXO: Validação → Rate Limit → Autenticação → Cookie Seguro
  */
 
-import { Body, Controller, Post, Res } from "@nestjs/common";
-import { Throttle } from "@nestjs/throttler";
-import { Response } from "express";
-import { AuthService } from "./auth.service";
-import type { LoginDto } from "./dto/login.dto";
+import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { Response } from 'express';
+import { AuthService } from './auth.service';
+import type { LoginDto } from './dto/login.dto';
 
-@Controller("auth")
+@Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
@@ -28,15 +28,9 @@ export class AuthController {
    * HTTP 429 se exceder 3/min
    */
   @Throttle({ default: { limit: 3, ttl: 60000 } })
-  @Post("login")
-  async login(
-    @Body() credentials: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const { access_token } = await this.authService.signIn(
-      credentials.email,
-      credentials.password,
-    );
+  @Post('login')
+  async login(@Body() credentials: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const { access_token } = await this.authService.signIn(credentials.email, credentials.password);
 
     /**
      * Cookie seguro com 4 proteções:
@@ -45,22 +39,22 @@ export class AuthController {
      * sameSite: "lax" → CSRF protection
      * maxAge: 1day → Force re-auth
      */
-    res.cookie("access_token", access_token, {
+    res.cookie('access_token', access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24,
     });
 
-    return { message: "Login realizado com sucesso" };
+    return { message: 'Login realizado com sucesso' };
   }
 
   /**
    * 🚪 POST /auth/logout - Limpar Sessão
    */
-  @Post("logout")
+  @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie("access_token");
-    return { message: "Logout realizado" };
+    res.clearCookie('access_token');
+    return { message: 'Logout realizado' };
   }
 }
