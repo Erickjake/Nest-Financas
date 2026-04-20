@@ -63,7 +63,7 @@ export class TransactionsService {
   ): Promise<PaginatedResponse<Record<string, unknown>>> {
     const [transactions, total] = await Promise.all([
       this.prisma.transaction.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null }, // Filtro de segurança: apenas este usuário e não deletados
         skip: pagination.getSkip(),
         take: pagination.getLimit(),
         include: {
@@ -75,10 +75,18 @@ export class TransactionsService {
               createdAt: true,
             },
           },
+          category: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+              icon: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' }, // Mais recentes primeiro
       }),
-      this.prisma.transaction.count({ where: { userId } }),
+      this.prisma.transaction.count({ where: { userId, deletedAt: null } }),
     ]);
 
     const limit = pagination.getLimit();
@@ -145,8 +153,9 @@ export class TransactionsService {
         amount: dto.amount,
         type: dto.type,
         date: dto.date ? new Date(dto.date) : new Date(),
+        ...(dto.categoryId ? { category: { connect: { id: Number(dto.categoryId) } } } : {}),
         user: {
-          connect: { id: userId }, // Linkar transação ao usuário
+          connect: { id: userId },
         },
       },
     });
@@ -172,6 +181,7 @@ export class TransactionsService {
         amount: dto.amount,
         type: dto.type,
         date: dto.date ? new Date(dto.date) : new Date(),
+        ...(dto.categoryId ? { category: { connect: { id: Number(dto.categoryId) } } } : {}),
       },
     });
   }

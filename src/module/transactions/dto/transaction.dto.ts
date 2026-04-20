@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,
   IsEnum,
@@ -17,6 +18,11 @@ export enum TransactionType {
 }
 
 export class CreateTransactionDto {
+  @ApiProperty({
+    description: 'O valor da transação',
+    example: 100.0,
+  })
+
   @IsNumber(
     { maxDecimalPlaces: 2 },
     {
@@ -29,12 +35,20 @@ export class CreateTransactionDto {
   @IsNotEmpty({ message: 'O valor é obrigatório' })
   amount!: number;
 
+  @ApiProperty({
+    description: 'O tipo de transação',
+    example: TransactionType.INCOME,
+  })
   @IsEnum(TransactionType, {
     message: 'O tipo deve ser INCOME, EXPENSE ou TRANSFER',
   })
   @IsNotEmpty({ message: 'O tipo de transação é obrigatório' })
   type!: TransactionType;
 
+  @ApiProperty({
+    description: 'A descrição da transação',
+    example: 'Receita de salário',
+  })
   @IsString()
   @IsNotEmpty({ message: 'A descrição é obrigatória' })
   @MaxLength(255, {
@@ -43,12 +57,18 @@ export class CreateTransactionDto {
   title!: string;
 
   // Campos Opcionais abaixo
-
+  @ApiProperty({
+    description: 'O ID da categoria associada à transação',
+    example: '123456',
+  })
   @IsOptional()
   @IsString({ message: 'O ID da categoria deve ser um texto válido' })
   categoryId?: string;
 
-  @IsOptional()
+  @ApiProperty({
+    description: 'A data da transação',
+    example: '2023-10-01T12:00:00Z',
+  })
   @IsDateString(
     {},
     {
@@ -57,6 +77,10 @@ export class CreateTransactionDto {
   )
   date?: string;
 
+  @ApiProperty({
+    description: 'O ID do destinatário para transferências',
+    example: '789012',
+  })
   @IsOptional()
   @IsString({ message: 'O ID do destinatário deve ser um texto válido' })
   receiverId?: string; // Usado apenas se o type for TRANSFER

@@ -11,6 +11,7 @@
  * Proteções contra: SQLi, weak passwords, injection de campos, type-mismatch
  */
 
+import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from 'class-validator';
 
 export class CreateUserDto {
@@ -24,6 +25,10 @@ export class CreateUserDto {
    * ✅ Válido: "user@example.com", "john.doe@company.co.uk"
    * ❌ Inválido: "user@", "user@.com", "user", "user@domain"
    */
+  @ApiProperty({
+    description: 'O email do usuário',
+    example: 'user@example.com',
+  })
   @IsEmail({}, { message: 'Email inválido' })
   @IsNotEmpty({ message: 'Email é obrigatório' })
   email!: string;
@@ -39,6 +44,10 @@ export class CreateUserDto {
    * ✅ Válido: "João", "Maria Silva", "José da Silva"
    * ❌ Inválido: "Jo", "", null
    */
+  @ApiProperty({
+    description: 'O nome do usuário',
+    example: 'João Silva',
+  })
   @IsString({ message: 'Nome deve ser texto' })
   @MinLength(3, { message: 'Nome deve ter no mínimo 3 caracteres' })
   @IsNotEmpty({ message: 'Nome é obrigatório' })
@@ -72,6 +81,10 @@ export class CreateUserDto {
    * - Reduz risk de rainbow tables (senhas mais aleatórias)
    * - Cumpre com normativas de segurança governamentais (NIST, PCI-DSS)
    */
+  @ApiProperty({
+    description: 'A senha do usuário',
+    example: 'SecurePass123',
+  })
   @IsString({ message: 'Senha deve ser texto' })
   @MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {

@@ -41,7 +41,8 @@
       }
     }
   },
-  "overrides": [{
+  "overrides": [
+    {
       "includes": ["**/*.spec.ts", "**/*.test.ts"],
       "linter": {
         "rules": {

@@ -8,15 +8,28 @@
  * ✅ Segurança: impede page/limit negativos ou muito grandes
  */
 
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsOptional, IsPositive, Max, Min } from 'class-validator';
 
 export class PaginationDto {
+  @ApiProperty({
+    description: 'Número da página (começa em 1)',
+    example: 1,
+    required: false,
+    default: 1,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsPositive({ message: 'page deve ser maior que 0' })
   page?: number = 1;
 
+  @ApiProperty({
+    description: 'Quantidade de registros por página (mínimo 1, máximo 100)',
+    example: 10,
+    required: false,
+    default: 10,
+  })
   @IsOptional()
   @Type(() => Number)
   @Min(1, { message: 'limit deve ser no mínimo 1' })

@@ -7,19 +7,22 @@
  *    - Resposta padrão: HTTP 400 Bad Request com mensagens em português
  *    - Implementação: @nestjs/common ValidationPipe com 3 flags de segurança
  */
+import './tracing';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule, {
-      logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+      bufferLogs: true,
     });
+    app.useLogger(app.get(Logger));
     app.use(cookieParser());
 
     /**
@@ -92,6 +95,11 @@ async function bootstrap() {
       .addTag('auth', 'Autenticação')
       .addTag('users', 'Gerenciamento de Usuários')
       .addTag('transactions', 'Gerenciamento de Transações')
+      .addTag('categories', 'Gerenciamento de Categorias')
+      .addTag('reports', 'Relatórios Financeiros')
+      .addTag('budgets', 'Orçamentos Mensais')
+      .addTag('export', 'Exportação de Dados (CSV/PDF)')
+      .addTag('backup', 'Backup e Restauração')
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/docs', app, document);

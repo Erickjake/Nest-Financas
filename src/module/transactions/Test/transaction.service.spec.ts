@@ -1,4 +1,4 @@
-import type { PrismaService } from 'src/prisma/prisma.service';
+import type { PrismaService } from '../../../prisma/prisma.service';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { type CreateTransactionDto, TransactionType } from '../dto/transaction.dto';
 import { TransactionsService } from '../transactions.service';
@@ -11,6 +11,7 @@ const prismaMock = {
     findUnique: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    count: vi.fn(),
   },
 };
 
@@ -200,6 +201,78 @@ describe('TransactionsService', () => {
 
       // --- ACT & ASSERT ---
       await expect(transactionsService.delete(999)).rejects.toThrow('Record not found');
+    });
+  });
+
+  describe('findAll()', () => {
+    test('deve retornar todas as transações com dados de usuário', async () => {
+      const mockTransactions = [
+        { id: 1, title: 'Salário', amount: 5000, user: { id: 1, name: 'Erick', email: 'e@e.com', createdAt: new Date() } },
+        { id: 2, title: 'Aluguel', amount: 1500, user: { id: 2, name: 'Maria', email: 'm@m.com', createdAt: new Date() } },
+      ];
+      prismaMock.transaction.findMany.mockResolvedValueOnce(mockTransactions);
+
+      const resultado = await transactionsService.findAll();
+
+      expect(resultado).toEqual(mockTransactions);
+      expect(prismaMock.transaction.findMany).toHaveBeenCalledWith({
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              createdAt: true,
+            },
+          },
+        },
+      });
+    });
+  });
+
+  describe('findAllByUserPaginated()', () => {
+    test('deve retornar transações paginadas com metadados corretos', async () => {
+      const mockTransactions = [
+        { id: 1, title: 'Salário', amount: 5000, userId: 1 },
+        { id: 2, title: 'Freelance', amount: 800, userId: 1 },
+      ];
+      prismaMock.transaction.findMany.mockResolvedValueOnce(mockTransactions);
+      prismaMock.transaction.count.mockResolvedValueOnce(15);
+
+      const pagination = { page: 1, limit: 10, getSkip: () => 0, getLimit: () => 10 } as any;
+      const resultado = await transactionsService.findAllByUserPaginated(1, pagination);
+
+      expect(resultado.data).toEqual(mockTransactions);
+      expect(resultado.meta).toMatchObject({
+        page: 1,
+        limit: 10,
+        total: 15,
+        totalPages: 2,
+        hasNextPage: true,
+        hasPreviousPage: false,
+      });
+    });
+
+    test('deve retornar hasPreviousPage true na página 2', async () => {
+      prismaMock.transaction.findMany.mockResolvedValueOnce([]);
+      prismaMock.transaction.count.mockResolvedValueOnce(15);
+
+      const pagination = { page: 2, limit: 10, getSkip: () => 10, getLimit: () => 10 } as any;
+      const resultado = await transactionsService.findAllByUserPaginated(1, pagination);
+
+      expect(resultado.meta.hasPreviousPage).toBe(true);
+      expect(resultado.meta.hasNextPage).toBe(false);
+    });
+
+    test('deve retornar hasNextPage false na última página', async () => {
+      prismaMock.transaction.findMany.mockResolvedValueOnce([]);
+      prismaMock.transaction.count.mockResolvedValueOnce(10);
+
+      const pagination = { page: 1, limit: 10, getSkip: () => 0, getLimit: () => 10 } as any;
+      const resultado = await transactionsService.findAllByUserPaginated(1, pagination);
+
+      expect(resultado.meta.hasNextPage).toBe(false);
+      expect(resultado.meta.totalPages).toBe(1);
     });
   });
 });

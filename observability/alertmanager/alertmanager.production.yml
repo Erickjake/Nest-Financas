@@ -1,0 +1,46 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.seu-provedor.com:587'
+  smtp_from: 'alertas@financas-api.com'
+  smtp_auth_username: 'alertas@financas-api.com'
+  smtp_auth_password: 'REPLACE_WITH_SMTP_PASSWORD'
+
+route:
+  receiver: 'on-call-default'
+  group_by: ['alertname', 'service', 'severity']
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+  routes:
+    - matchers:
+        - severity="critical"
+      receiver: 'on-call-critical'
+      continue: true
+    - matchers:
+        - severity=~"warning|critical"
+      receiver: 'slack-warning-critical'
+
+receivers:
+  - name: 'on-call-default'
+    email_configs:
+      - to: 'sre@financas-api.com'
+        send_resolved: true
+
+  - name: 'on-call-critical'
+    pagerduty_configs:
+      - routing_key: 'REPLACE_WITH_PAGERDUTY_ROUTING_KEY'
+        severity: 'critical'
+        send_resolved: true
+
+  - name: 'slack-warning-critical'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/T00000000/B00000000/REPLACE_WITH_REAL_WEBHOOK'
+        channel: '#alerts-financas-api'
+        username: 'alertmanager'
+        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        text: >-
+          *Service:* {{ .CommonLabels.service }}
+          *Severity:* {{ .CommonLabels.severity }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}
+        send_resolved: true

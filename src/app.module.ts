@@ -15,15 +15,60 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { randomUUID } from 'node:crypto';
+import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { TransactionsModule } from './module/transactions/transactions.module';
 import { UsersModule } from './module/users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { BackupModule } from './module/backup/backup.module';
+import { BudgetsModule } from './module/budgets/budgets.module';
+import { CategoriesModule } from './module/categories/categories.module';
+import { ExportModule } from './module/export/export.module';
+import { ReportsModule } from './module/reports/reports.module';
+import { ObservabilityModule } from './observability/observability.module';
 
 @Module({
   imports: [
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.LOG_LEVEL ?? 'info',
+        genReqId: (req) => {
+          const requestIdHeader = req.headers['x-request-id'];
+          return typeof requestIdHeader === 'string' ? requestIdHeader : randomUUID();
+        },
+        customProps: () => ({
+          context: 'HTTP',
+        }),
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  singleLine: true,
+                  translateTime: 'SYS:standard',
+                  ignore: 'pid,hostname',
+                },
+              }
+            : undefined,
+        serializers: {
+          req: (req) => ({
+            id: req.id,
+            method: req.method,
+            url: req.url,
+            query: req.query,
+            params: req.params,
+            userAgent: req.headers['user-agent'],
+          }),
+          res: (res) => ({
+            statusCode: res.statusCode,
+          }),
+        },
+      },
+    }),
     /**
      * ⏱️ RATE LIMITING GLOBAL (@nestjs/throttler)
      *
@@ -56,6 +101,12 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     UsersModule,
     AuthModule,
+    CategoriesModule,
+    ReportsModule,
+    BudgetsModule,
+    ExportModule,
+    BackupModule,
+    ObservabilityModule,
   ],
   controllers: [AppController],
   providers: [
