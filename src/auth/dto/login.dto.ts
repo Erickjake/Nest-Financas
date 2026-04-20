@@ -13,6 +13,7 @@
  * - LoginDto NÃO tem campo de nome, reduzindo superfície de ataque
  */
 
+import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from 'class-validator';
 
 export class LoginDto {
@@ -21,6 +22,10 @@ export class LoginDto {
    * Validação: @IsEmail() + @IsNotEmpty()
    * Rejeita: "user@", "user@.com", emails vazios, null
    */
+  @ApiProperty({
+    description: 'Email do usuário para autenticação',
+    example: 'user@example.com',
+  })
   @IsEmail({}, { message: 'Email inválido' })
   @IsNotEmpty({ message: 'Email é obrigatório' })
   email!: string;
@@ -36,6 +41,10 @@ export class LoginDto {
    * O hash no DB já foi gerado na criação do usuário (CreateUserDto)
    * Aqui apenas validamos o formato antes de comparar
    */
+  @ApiProperty({
+    description: 'Senha do usuário (mín. 8 caracteres com maiúscula, minúscula e número)',
+    example: 'SecurePass123',
+  })
   @IsString({ message: 'Senha deve ser texto' })
   @MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {

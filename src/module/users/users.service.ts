@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { CreateUserDto } from './dto/create-user.dto';
@@ -12,16 +12,24 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
 
-    return await this.prisma.user.create({
-      data: {
-        ...createUserDto,
-        password: hashedPassword,
-      },
-    });
+    try {
+      return await this.prisma.user.create({
+        data: {
+          ...createUserDto,
+          password: hashedPassword,
+        },
+        omit: { password: true },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('email já está em uso');
+      }
+      throw error;
+    }
   }
 
   async findAll() {
-    return await this.prisma.user.findMany();
+    return await this.prisma.user.findMany({ omit: { password: true } });
   }
 
   async findOne(id: number) {
@@ -29,6 +37,7 @@ export class UsersService {
       where: {
         id,
       },
+      omit: { password: true },
     });
     return data;
   }
@@ -39,6 +48,7 @@ export class UsersService {
         id,
       },
       data: updateUserDto,
+      omit: { password: true },
     });
     return data;
   }
@@ -48,6 +58,7 @@ export class UsersService {
       where: {
         id,
       },
+      omit: { password: true },
     });
     return data;
   }

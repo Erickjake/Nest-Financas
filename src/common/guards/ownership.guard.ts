@@ -49,8 +49,8 @@ export class OwnershipGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     // Extrair userId do JWT payload (definido pelo JwtStrategy)
-    // JWT pode conter "id" ou "sub" dependendo da estratégia
-    const userId = request.user?.id || request.user?.sub;
+    // JwtStrategy define { userId, email } no payload
+    const userId = request.user?.userId || request.user?.sub;
 
     if (!userId) {
       throw new ForbiddenException('Usuário não autenticado ou token inválido');
@@ -81,7 +81,7 @@ export class TransactionOwnershipGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const userId = request.user?.id || request.user?.sub;
+    const userId = request.user?.userId || request.user?.sub;
     const transactionId = request.params.id;
 
     if (!userId) {

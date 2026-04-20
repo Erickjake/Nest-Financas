@@ -1,0 +1,37 @@
+groups:
+  - name: financas-api-alerts
+    rules:
+      - alert: FinancasApiDown
+        expr: up{job="financas-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API fora do ar"
+          description: "A API de finanças não respondeu ao scrape do Prometheus por mais de 1 minuto."
+
+      - alert: FinancasApiHighErrorRate
+        expr: |
+          sum(rate(financas_api_http_requests_total{status_code=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(financas_api_http_requests_total[5m])), 0.001)
+          > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taxa alta de erros 5xx"
+          description: "A API está com taxa de erros 5xx maior que 5% por 5 minutos."
+
+      - alert: FinancasApiHighP95Latency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(financas_api_http_request_duration_ms_bucket[5m])) by (le)
+          ) > 500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latência p95 elevada"
+          description: "Latência p95 acima de 500ms por 5 minutos."

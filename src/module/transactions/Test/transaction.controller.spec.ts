@@ -9,6 +9,7 @@ import type { TransactionsService } from '../transactions.service';
 const mockTransactionsService = {
   findAll: vi.fn(),
   findAllByUser: vi.fn(),
+  findAllByUserPaginated: vi.fn(),
   create: vi.fn(),
   findOne: vi.fn(),
   update: vi.fn(),
@@ -27,18 +28,32 @@ describe('TransactionsController', () => {
   });
 
   describe('getAllTransactions()', () => {
-    test('deve chamar o findAllByUser do service com userId do JWT', async () => {
+    test('deve chamar o findAllByUserPaginated do service com userId do JWT', async () => {
       // --- ARRANGE ---
       const mockRequest = { user: { sub: 10 } };
-      const mockResult = [{ id: 1, title: 'Salário', amount: 5000, userId: 10 }];
-      mockTransactionsService.findAllByUser.mockResolvedValue(mockResult);
+      const mockPagination = { page: 1, limit: 10 };
+      const mockResult = {
+        data: [{ id: 1, title: 'Salário', amount: 5000, userId: 10 }],
+        meta: {
+          page: 1,
+          limit: 10,
+          total: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+      mockTransactionsService.findAllByUserPaginated.mockResolvedValue(mockResult);
 
       // --- ACT ---
-      const result = await controller.getAllTransactions(mockRequest);
+      const result = await controller.getAllTransactions(mockRequest, mockPagination);
 
       // --- ASSERT ---
       expect(result).toEqual(mockResult);
-      expect(mockTransactionsService.findAllByUser).toHaveBeenCalledWith(10);
+      expect(mockTransactionsService.findAllByUserPaginated).toHaveBeenCalledWith(
+        10,
+        mockPagination,
+      );
     });
   });
 

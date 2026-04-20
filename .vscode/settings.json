@@ -1,4 +1,6 @@
 {
   "compile-hero.disable-compile-files-on-did-save-code": false,
-  "claudeCodeChat.permissions.yoloMode": false
+  "claudeCodeChat.permissions.yoloMode": false,
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true
 }

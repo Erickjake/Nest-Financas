@@ -1,0 +1,15 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'default-receiver'
+  group_by: ['alertname', 'severity']
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+
+receivers:
+  - name: 'default-receiver'
+    webhook_configs:
+      - url: 'http://host.docker.internal:5001/alerts'
+        send_resolved: true

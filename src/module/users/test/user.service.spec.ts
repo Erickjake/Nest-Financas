@@ -170,6 +170,7 @@ describe('UsersService', () => {
       expect(resultado).toEqual(usuario);
       expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
         where: { id: userId },
+        omit: { password: true },
       });
     });
 
@@ -258,6 +259,7 @@ describe('UsersService', () => {
       expect(prismaMock.user.update).toHaveBeenCalledWith({
         where: { id: userId },
         data: updateUserDto,
+        omit: { password: true },
       });
     });
 
@@ -302,6 +304,7 @@ describe('UsersService', () => {
       expect(resultado).toEqual(usuarioDeletado);
       expect(prismaMock.user.delete).toHaveBeenCalledWith({
         where: { id: userId },
+        omit: { password: true },
       });
     });
 

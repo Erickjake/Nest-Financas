@@ -1,0 +1,58 @@
+{
+    "id": null,
+    "uid": "financas-api-overview",
+    "title": "Financas API - Observabilidade",
+    "schemaVersion": 39,
+    "version": 1,
+    "refresh": "10s",
+    "time": {
+        "from": "now-30m",
+        "to": "now"
+    },
+    "panels": [{
+            "type": "timeseries",
+            "title": "Requests/s",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [{
+                "expr": "sum(rate(financas_api_http_requests_total[1m]))",
+                "legendFormat": "req/s",
+                "refId": "A"
+            }]
+        },
+        {
+            "type": "timeseries",
+            "title": "Taxa de erros 5xx",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "targets": [{
+                "expr": "sum(rate(financas_api_http_requests_total{status_code=~\"5..\"}[5m]))",
+                "legendFormat": "5xx/s",
+                "refId": "A"
+            }]
+        },
+        {
+            "type": "timeseries",
+            "title": "Latencia p95 (ms)",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 8
+            },
+            "targets": [{
+                "expr": "histogram_quantile(0.95, sum(rate(financas_api_http_request_duration_ms_bucket[5m])) by (le))",
+                "legendFormat": "p95",
+                "refId": "A"
+            }]
+        }
+    ]
+}
