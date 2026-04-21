@@ -1,209 +1,266 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Financas API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST para gestao financeira pessoal com autenticacao JWT por cookie HttpOnly, controle de categorias/orcamentos, relatorios, exportacao (CSV/PDF), backup e observabilidade completa (Prometheus, Grafana, Jaeger e Alertmanager).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Visao geral
 
-## Description
+A aplicacao foi desenvolvida com NestJS + Prisma (PostgreSQL) e inclui:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Autenticacao com access token e refresh token via cookie seguro
+- CRUD de usuarios, transacoes, categorias e orcamentos
+- Relatorios de resumo, por categoria e mensal
+- Exportacao de transacoes em CSV e PDF
+- Backup e restauracao de dados em JSON
+- Rate limit, validacao global, helmet e filtro global de excecoes
+- Observabilidade com logs estruturados, metricas e tracing distribuido
 
-## Project setup
+## Stack
+
+- Runtime: Node.js
+- Framework: NestJS
+- Banco: PostgreSQL via Prisma + adapter pg
+- Autenticacao: JWT + Passport
+- Testes: Vitest + Supertest
+- Lint/format: Biome
+- Observabilidade: OpenTelemetry, Prometheus, Grafana, Jaeger, Alertmanager
+
+## Estrutura principal
+
+- src/auth: login, refresh, logout e estrategia JWT
+- src/module/users: usuarios
+- src/module/transactions: transacoes
+- src/module/categories: categorias
+- src/module/budgets: orcamentos
+- src/module/reports: relatorios
+- src/module/export: exportacao CSV/PDF
+- src/module/backup: backup/restore
+- src/observability: endpoint /metrics e instrumentacao
+- prisma: schema e migrations
+- observability: configs de Prometheus/Grafana/Alertmanager
+
+## Requisitos
+
+- Node.js 20+ (recomendado)
+- npm 10+
+- PostgreSQL acessivel pela DATABASE_URL
+- Docker (opcional, para stack de observabilidade)
+
+## Configuracao de ambiente
+
+Crie um arquivo .env na raiz do projeto.
+
+Opcao recomendada:
 
 ```bash
-$ npm install
+cp .env.example .env
 ```
 
-## Compile and run the project
+No Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Exemplo minimo:
+
+```env
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/financas
+JWT_SECRET=sua_chave_jwt_forte
+JWT_REFRESH_SECRET=sua_chave_refresh_forte
+CORS_ORIGIN=http://localhost:3000
+NODE_ENV=development
+LOG_LEVEL=info
+
+OTEL_SERVICE_NAME=financas-api
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
+
+# opcional: protege o endpoint /metrics
+METRICS_AUTH_TOKEN=
+```
+
+## Instalacao
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
+npx prisma generate
 ```
 
-## Run tests
+Se for o primeiro setup de banco:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx prisma migrate dev
 ```
 
-## Observabilidade (Fase 4)
+## Executar o projeto
 
-### Logging estruturado (Pino)
+Desenvolvimento (watch):
 
-- O logger HTTP estruturado ja esta ativo via `nestjs-pino`.
-- Em desenvolvimento, os logs ficam formatados com `pino-pretty`.
-- Em producao, os logs sao emitidos em JSON para agregadores (ELK, Loki, Datadog, etc).
+```bash
+npm run start:dev
+```
 
-Variaveis uteis:
+Outros modos:
 
-- `LOG_LEVEL=info`
+```bash
+npm run start
+npm run start:prod
+```
 
-### Tracing distribuido (Jaeger)
+Aplicacao local:
 
-- O OpenTelemetry e inicializado no bootstrap (`src/tracing.ts`).
-- As traces sao exportadas por OTLP HTTP.
+- API: http://localhost:3000
+- Swagger: http://localhost:3000/api/docs
 
-Variaveis uteis:
+## Docker Compose (observabilidade)
 
-- `OTEL_SERVICE_NAME=financas-api`
-- `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces`
-
-### Monitoramento (Prometheus + Grafana)
-
-- Endpoint de metricas: `GET /metrics`
-- Se `METRICS_AUTH_TOKEN` estiver definido, enviar `Authorization: Bearer <token>`.
-
-Subir stack completa:
+Subir stack com API + observabilidade:
 
 ```bash
 docker compose up -d --build
 ```
 
-URLs locais:
+Servicos:
 
-- API: `http://localhost:3000`
-- Metrics: `http://localhost:3000/metrics`
-- Jaeger: `http://localhost:16686`
-- Prometheus: `http://localhost:9090`
-- Alertmanager: `http://localhost:9093`
-- Grafana: `http://localhost:3001` (admin/admin)
+- API: http://localhost:3000
+- Metrics: http://localhost:3000/metrics
+- Jaeger: http://localhost:16686
+- Prometheus: http://localhost:9090
+- Alertmanager: http://localhost:9093
+- Grafana: http://localhost:3001 (admin/admin)
 
-### Alertas em producao
+## Autenticacao
 
-- Regras de alerta em `observability/prometheus/alerts.yml`:
-  - API indisponivel (`FinancasApiDown`)
-  - Taxa de erro 5xx alta (`FinancasApiHighErrorRate`)
-  - Latencia p95 alta (`FinancasApiHighP95Latency`)
-- Roteamento no Alertmanager em `observability/alertmanager/alertmanager.yml`.
-- Ajuste o webhook para seu canal de notificacao (Slack, Teams, PagerDuty, etc).
+A API protegida usa cookie access_token (HttpOnly), nao Authorization Bearer por padrao.
 
-Configuracao pronta para producao:
+Fluxo:
 
-- Arquivo: `observability/alertmanager/alertmanager.production.yml`
-- Canais incluidos: Email (default), Slack (warning/critical) e PagerDuty (critical)
+1. POST /users (criar usuario)
+2. POST /auth/login (recebe cookies access_token e refresh_token)
+3. Consumir endpoints protegidos enviando cookie access_token
+4. POST /auth/refresh para renovar sessao
+5. POST /auth/logout para encerrar sessao
 
-Selecao dinamica da configuracao no compose:
+## Endpoints principais
 
-- O `docker-compose.yml` usa `ALERTMANAGER_CONFIG_FILE` para definir o arquivo montado.
-- Default (local): `./observability/alertmanager/alertmanager.yml`
-- Producao: `./observability/alertmanager/alertmanager.production.yml`
+Auth:
 
-Exemplo de uso em producao:
+- POST /auth/login
+- POST /auth/refresh
+- POST /auth/logout
 
-```bash
-$env:ALERTMANAGER_CONFIG_FILE='./observability/alertmanager/alertmanager.production.yml'
-docker compose up -d alertmanager
-```
+Usuarios:
 
-Depois preencha os segredos reais no arquivo de producao:
+- POST /users
+- GET /users
+- GET /users/:id
+- PATCH /users/:id
+- DELETE /users/:id
 
-- `smtp_auth_password`
-- `pagerduty_configs.routing_key`
-- `slack_configs.api_url`
+Transacoes (protegidos):
 
-Teste manual de alerta (fim a fim no Alertmanager):
+- GET /transactions?page=&limit=
+- POST /transactions
+- GET /transactions/:id
+- PUT /transactions/:id
+- DELETE /transactions/:id
 
-```bash
-curl -X POST http://localhost:9093/api/v2/alerts \
-  -H "Content-Type: application/json" \
-  -d '[{"labels":{"alertname":"FinancasApiManualTest","severity":"warning","service":"financas-api"},"annotations":{"summary":"Alerta manual de teste","description":"Validacao fim a fim"},"startsAt":"2026-04-20T22:45:00Z","endsAt":"2026-04-20T23:00:00Z"}]'
-```
+Categorias:
 
-Conferir alerta ativo:
+- POST /categories
+- GET /categories
+- GET /categories/:id
+- PATCH /categories/:id
+- DELETE /categories/:id
 
-```bash
-curl http://localhost:9093/api/v2/alerts
-```
+Orcamentos (protegidos):
 
-### Checklist de validacao de tracing (Jaeger)
+- POST /budgets
+- GET /budgets
+- GET /budgets/status?month=&year=
+- GET /budgets/:id
+- PATCH /budgets/:id
+- DELETE /budgets/:id
 
-1. Garanta que o Jaeger esteja com OTLP habilitado e acessivel em rede Docker.
-2. Gere trafego na API (ex.: `GET /`, `GET /metrics`, `GET /transactions`).
-3. Consulte os servicos no Jaeger:
+Relatorios (protegidos):
 
-```bash
-curl http://localhost:16686/api/services
-```
+- GET /reports/summary
+- GET /reports/by-category
+- GET /reports/monthly
 
-Resultado esperado: lista contendo `financas-api`.
+Exportacao (protegidos):
 
-4. Consulte traces recentes:
+- GET /export/csv
+- GET /export/pdf
 
-```bash
-curl "http://localhost:16686/api/traces?service=financas-api&limit=5"
-```
+Backup (protegidos):
 
-Resultado esperado: campo `data` com traces nao vazio.
+- GET /backup
+- POST /backup/restore
 
-5. Validacao cruzada em logs: os logs HTTP devem conter `trace_id` e `span_id`.
+## Testes e qualidade
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Executar testes:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run test
+npm run test:e2e
+npm run test:cov
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Rodar Biome:
 
-## Resources
+```bash
+npx @biomejs/biome ci .
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## Observabilidade
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Logs
 
-## Support
+- Logger HTTP estruturado com nestjs-pino
+- Em dev: logs amigaveis
+- Em prod: JSON estruturado
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Metricas
 
-## Stay in touch
+- Endpoint: GET /metrics
+- Se METRICS_AUTH_TOKEN estiver definido, enviar:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```http
+Authorization: Bearer <token>
+```
 
-## License
+### Tracing
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Instrumentacao OpenTelemetry inicializada no bootstrap
+- Exportacao OTLP HTTP configuravel por variavel de ambiente
+
+## Arquivo de requests pronto
+
+Use o arquivo api_test.http para testar rapidamente todos os fluxos.
+
+Ele ja contem:
+
+- Variaveis de ambiente para baseUrl e cookies
+- Requests de auth, CRUDs, relatorios, exportacao e backup
+
+## Troubleshooting rapido
+
+Erro ao subir com npm run start:dev:
+
+- Verifique DATABASE_URL no .env
+- Rode npx prisma generate
+- Garanta que o banco esteja acessivel
+
+Erro 401 em rotas protegidas:
+
+- Confirme login em /auth/login
+- Envie cookie access_token na requisicao
+
+Erro no /metrics:
+
+- Se METRICS_AUTH_TOKEN estiver ativo, envie Authorization Bearer correto
+
+## Licenca
+
+UNLICENSED
