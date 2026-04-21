@@ -108,8 +108,8 @@ npm run start:prod
 
 Aplicacao local:
 
-- API: http://localhost:3000
-- Swagger: http://localhost:3000/api/docs
+- API: <http://localhost:3000>
+- Swagger: <http://localhost:3000/api/docs>
 
 ## Docker Compose (observabilidade)
 
@@ -121,12 +121,12 @@ docker compose up -d --build
 
 Servicos:
 
-- API: http://localhost:3000
-- Metrics: http://localhost:3000/metrics
-- Jaeger: http://localhost:16686
-- Prometheus: http://localhost:9090
-- Alertmanager: http://localhost:9093
-- Grafana: http://localhost:3001 (admin/admin)
+- API: <http://localhost:3000>
+- Metrics: <http://localhost:3000/metrics>
+- Jaeger: <http://localhost:16686>
+- Prometheus: <http://localhost:9090>
+- Alertmanager: <http://localhost:9093>
+- Grafana: <http://localhost:3001> (admin/admin)
 
 ## Autenticacao
 
