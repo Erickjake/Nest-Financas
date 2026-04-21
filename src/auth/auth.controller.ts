@@ -10,10 +10,10 @@
  * FLUXO: Validação → Rate Limit → Autenticação → Cookie Seguro
  */
 
-import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { Response } from 'express';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -21,6 +21,24 @@ import { LoginDto } from './dto/login.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  private getAccessCookieOptions() {
+    return {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge: 1000 * 60 * 15,
+    };
+  }
+
+  private getRefreshCookieOptions() {
+    return {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    };
+  }
 
   /**
    * 🛡️ POST /auth/login - Autenticação com Rate Limiting
@@ -63,7 +81,10 @@ export class AuthController {
   @Post('login')
   @HttpCode(200)
   async login(@Body() credentials: LoginDto, @Res({ passthrough: true }) res: Response) {
-    const { access_token } = await this.authService.signIn(credentials.email, credentials.password);
+    const { access_token, refresh_token } = await this.authService.signIn(
+      credentials.email,
+      credentials.password,
+    );
 
     /**
      * Cookie seguro com 4 proteções:
@@ -72,14 +93,36 @@ export class AuthController {
      * sameSite: "lax" → CSRF protection
      * maxAge: 1day → Force re-auth
      */
-    res.cookie('access_token', access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24,
-    });
+    res.cookie('access_token', access_token, this.getAccessCookieOptions());
+    res.cookie('refresh_token', refresh_token, this.getRefreshCookieOptions());
 
     return { message: 'Login realizado com sucesso' };
+  }
+
+  @ApiOperation({
+    summary: 'Renovar sessão',
+    description:
+      'Gera novo access token e novo refresh token a partir do cookie refresh_token atual.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sessão renovada com sucesso.',
+    schema: { example: { message: 'Sessão renovada com sucesso' } },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Refresh token ausente, expirado ou inválido.',
+  })
+  @Post('refresh')
+  @HttpCode(200)
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req?.cookies?.refresh_token as string | undefined;
+    const { access_token, refresh_token } = await this.authService.refresh(refreshToken || '');
+
+    res.cookie('access_token', access_token, this.getAccessCookieOptions());
+    res.cookie('refresh_token', refresh_token, this.getRefreshCookieOptions());
+
+    return { message: 'Sessão renovada com sucesso' };
   }
 
   /**
@@ -96,8 +139,12 @@ export class AuthController {
   })
   @Post('logout')
   @HttpCode(200)
-  async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('access_token');
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req?.cookies?.refresh_token as string | undefined;
+    await this.authService.logout(refreshToken);
+
+    res.clearCookie('access_token', this.getAccessCookieOptions());
+    res.clearCookie('refresh_token', this.getRefreshCookieOptions());
     return { message: 'Logout realizado' };
   }
 }

@@ -162,6 +162,73 @@ describe('E2E - Segurança e Infraestrutura', () => {
       const logoutCookie = String(logoutRes.headers['set-cookie']);
       expect(logoutCookie).toContain('access_token=;');
     });
+
+    it('deve renovar sessão via /auth/refresh e rotacionar refresh token', async () => {
+      await request(app.getHttpServer())
+        .post('/users')
+        .send({
+          name: 'Refresh Test',
+          email: `refresh.${uniqueSuffix}@test.com`,
+          password: 'SenhaForte123',
+        });
+
+      const loginRes = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: `refresh.${uniqueSuffix}@test.com`, password: 'SenhaForte123' })
+        .expect(200);
+
+      const cookiesFromLogin = loginRes.headers['set-cookie'] as string[];
+      const refreshCookieBefore = cookiesFromLogin.find((cookie) =>
+        cookie.startsWith('refresh_token='),
+      );
+      expect(refreshCookieBefore).toBeDefined();
+      const refreshTokenBefore = (refreshCookieBefore as string).split(';')[0].split('=')[1];
+
+      const refreshRes = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [`refresh_token=${refreshTokenBefore}`])
+        .expect(200);
+
+      const cookiesFromRefresh = refreshRes.headers['set-cookie'] as string[];
+      const refreshCookieAfter = cookiesFromRefresh.find((cookie) =>
+        cookie.startsWith('refresh_token='),
+      );
+      expect(refreshCookieAfter).toBeDefined();
+      const refreshTokenAfter = (refreshCookieAfter as string).split(';')[0].split('=')[1];
+      expect(refreshCookieAfter).not.toEqual(refreshCookieBefore);
+      expect(refreshTokenAfter).not.toEqual(refreshTokenBefore);
+
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [`refresh_token=${refreshTokenBefore}`])
+        .expect(401);
+
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [`refresh_token=${refreshTokenAfter}`])
+        .expect(200);
+    });
+
+    it('deve revogar refresh token no logout', async () => {
+      await request(app.getHttpServer())
+        .post('/users')
+        .send({
+          name: 'Logout Revoke',
+          email: `logout-revoke.${uniqueSuffix}@test.com`,
+          password: 'SenhaForte123',
+        });
+
+      const loginRes = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: `logout-revoke.${uniqueSuffix}@test.com`, password: 'SenhaForte123' })
+        .expect(200);
+
+      const cookies = loginRes.headers['set-cookie'] as string[];
+
+      await request(app.getHttpServer()).post('/auth/logout').set('Cookie', cookies).expect(200);
+
+      await request(app.getHttpServer()).post('/auth/refresh').set('Cookie', cookies).expect(401);
+    });
   });
 
   // =======================================================

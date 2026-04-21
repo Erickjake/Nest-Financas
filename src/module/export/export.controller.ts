@@ -23,7 +23,7 @@ export class ExportController {
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
   async exportCsv(@Query() filter: ReportFilterDto, @Request() req, @Res() res: Response) {
     const transactions = await this.exportService.getTransactions(req.user.userId, filter);
-    const csv = this.exportService.generateCsv(transactions as Record<string, unknown>[]);
+    const csv = this.exportService.generateCsv(transactions);
 
     const filename = `transacoes_${new Date().toISOString().split('T')[0]}.csv`;
     res.set({
@@ -31,7 +31,7 @@ export class ExportController {
       'Content-Disposition': `attachment; filename="${filename}"`,
     });
     // BOM para Excel reconhecer UTF-8
-    res.send('\uFEFF' + csv);
+    res.send(`\uFEFF${csv}`);
   }
 
   @Get('pdf')
@@ -45,9 +45,7 @@ export class ExportController {
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
   async exportPdf(@Query() filter: ReportFilterDto, @Request() req, @Res() res: Response) {
     const transactions = await this.exportService.getTransactions(req.user.userId, filter);
-    const pdfBuffer = await this.exportService.generatePdf(
-      transactions as Record<string, unknown>[],
-    );
+    const pdfBuffer = await this.exportService.generatePdf(transactions);
 
     const filename = `transacoes_${new Date().toISOString().split('T')[0]}.pdf`;
     res.set({

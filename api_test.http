@@ -1,46 +1,234 @@
-### Listar Transações
-GET http://localhost:3000/transactions
+@baseUrl = http://localhost:3000
+@email = user@example.com
+@password = Password123
+@accessTokenCookie = COLE_AQUI_O_VALOR_DO_COOKIE_ACCESS_TOKEN
+@refreshTokenCookie = COLE_AQUI_O_VALOR_DO_COOKIE_REFRESH_TOKEN
+@metricsToken = COLE_SE_TIVER_METRICS_AUTH_TOKEN
 
-### Criar Transação
-POST http://localhost:3000/transactions
+### Health básico
+GET {{baseUrl}}
+
+### ======================
+### AUTENTICAÇÃO
+### ======================
+
+### Criar usuário
+POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-  "amount": 2500.00,
-  "type": "INCOME",
-  "title": "Salário Mensal"
-}
-
-### Login
-POST http://localhost:3000/auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "123456"
-}
-
-### Logout
-POST http://localhost:3000/auth/logout
-
-### Criar Usuário
-POST http://localhost:3000/users
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "123456",
+  "email": "{{email}}",
+  "password": "{{password}}",
   "name": "User Name"
 }
 
-### Listar Usuários
-GET http://localhost:3000/users
-
-
-### Listar Transações
-GET http://localhost:3000/transactions
+### Login (gera cookies access_token e refresh_token)
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "userId": 1
+  "email": "{{email}}",
+  "password": "{{password}}"
 }
+
+### Refresh de sessão (usa cookie refresh_token)
+POST {{baseUrl}}/auth/refresh
+Cookie: refresh_token={{refreshTokenCookie}}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Cookie: access_token={{accessTokenCookie}}
+
+### ======================
+### USUÁRIOS
+### ======================
+
+### Listar usuários
+GET {{baseUrl}}/users
+
+### Buscar usuário por ID
+GET {{baseUrl}}/users/1
+
+### Atualizar usuário
+PATCH {{baseUrl}}/users/1
+Content-Type: application/json
+
+{
+  "name": "User Name Atualizado"
+}
+
+### ======================
+### CATEGORIAS
+### ======================
+
+### Criar categoria
+POST {{baseUrl}}/categories
+Content-Type: application/json
+
+{
+  "name": "Alimentação",
+  "description": "Gastos com comida",
+  "color": "#FF5733",
+  "icon": "utensils"
+}
+
+### Listar categorias
+GET {{baseUrl}}/categories
+
+### Buscar categoria por ID
+GET {{baseUrl}}/categories/1
+
+### Atualizar categoria
+PATCH {{baseUrl}}/categories/1
+Content-Type: application/json
+
+{
+  "description": "Gastos com alimentação fora de casa"
+}
+
+### ======================
+### TRANSAÇÕES (PROTEGIDAS)
+### ======================
+
+### Listar transações paginadas
+GET {{baseUrl}}/transactions?page=1&limit=10
+Cookie: access_token={{accessTokenCookie}}
+
+### Criar transação
+POST {{baseUrl}}/transactions
+Content-Type: application/json
+Cookie: access_token={{accessTokenCookie}}
+
+{
+  "title": "Salário Mensal",
+  "amount": 2500.00,
+  "type": "RECEITA",
+  "date": "2026-04-21"
+}
+
+### Buscar transação por ID
+GET {{baseUrl}}/transactions/1
+Cookie: access_token={{accessTokenCookie}}
+
+### Atualizar transação
+PUT {{baseUrl}}/transactions/1
+Content-Type: application/json
+Cookie: access_token={{accessTokenCookie}}
+
+{
+  "title": "Salário Atualizado",
+  "amount": 2600.00,
+  "type": "RECEITA",
+  "date": "2026-04-21"
+}
+
+### Deletar transação
+DELETE {{baseUrl}}/transactions/1
+Cookie: access_token={{accessTokenCookie}}
+
+### ======================
+### ORÇAMENTOS (PROTEGIDOS)
+### ======================
+
+### Criar orçamento
+POST {{baseUrl}}/budgets
+Content-Type: application/json
+Cookie: access_token={{accessTokenCookie}}
+
+{
+  "amount": 1200,
+  "month": 4,
+  "year": 2026,
+  "alertThreshold": 80,
+  "categoryId": 1
+}
+
+### Listar orçamentos
+GET {{baseUrl}}/budgets
+Cookie: access_token={{accessTokenCookie}}
+
+### Status de orçamentos
+GET {{baseUrl}}/budgets/status?month=4&year=2026
+Cookie: access_token={{accessTokenCookie}}
+
+### ======================
+### RELATÓRIOS (PROTEGIDOS)
+### ======================
+
+### Resumo financeiro
+GET {{baseUrl}}/reports/summary?startDate=2026-04-01&endDate=2026-04-30
+Cookie: access_token={{accessTokenCookie}}
+
+### Gastos por categoria
+GET {{baseUrl}}/reports/by-category?startDate=2026-04-01&endDate=2026-04-30
+Cookie: access_token={{accessTokenCookie}}
+
+### Relatório mensal
+GET {{baseUrl}}/reports/monthly?startDate=2026-01-01&endDate=2026-12-31
+Cookie: access_token={{accessTokenCookie}}
+
+### ======================
+### EXPORTAÇÃO (PROTEGIDA)
+### ======================
+
+### Exportar CSV
+GET {{baseUrl}}/export/csv?startDate=2026-04-01&endDate=2026-04-30
+Cookie: access_token={{accessTokenCookie}}
+
+### Exportar PDF
+GET {{baseUrl}}/export/pdf?startDate=2026-04-01&endDate=2026-04-30
+Cookie: access_token={{accessTokenCookie}}
+
+### ======================
+### BACKUP (PROTEGIDO)
+### ======================
+
+### Exportar backup JSON
+GET {{baseUrl}}/backup
+Cookie: access_token={{accessTokenCookie}}
+
+### Restaurar backup JSON
+POST {{baseUrl}}/backup/restore
+Content-Type: application/json
+Cookie: access_token={{accessTokenCookie}}
+
+{
+  "version": "1.0",
+  "data": {
+    "transactions": [
+      {
+        "title": "Transação restaurada",
+        "amount": 100,
+        "type": "EXPENSE",
+        "date": "2026-04-21T00:00:00.000Z",
+        "categoryId": 1
+      }
+    ],
+    "categories": [
+      {
+        "id": 1,
+        "name": "Alimentação",
+        "description": "Gastos com comida",
+        "color": "#FF5733",
+        "icon": "utensils"
+      }
+    ],
+    "budgets": [
+      {
+        "amount": 900,
+        "month": 4,
+        "year": 2026,
+        "alertThreshold": 80,
+        "categoryId": 1
+      }
+    ]
+  }
+}
+
+### ======================
+### OBSERVABILIDADE
+### ======================
+
+### Metrics (se METRICS_AUTH_TOKEN estiver configurado)
+GET {{baseUrl}}/metrics
+Authorization: Bearer {{metricsToken}}

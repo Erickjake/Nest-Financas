@@ -20,8 +20,8 @@ export class UsersService {
         },
         omit: { password: true },
       });
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      if ((error as { code?: string }).code === 'P2002') {
         throw new ConflictException('email já está em uso');
       }
       throw error;
@@ -67,6 +67,13 @@ export class UsersService {
       where: {
         email,
       },
+    });
+  }
+
+  async setRefreshTokenHash(userId: number, refreshTokenHash: string | null) {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshTokenHash },
     });
   }
 }

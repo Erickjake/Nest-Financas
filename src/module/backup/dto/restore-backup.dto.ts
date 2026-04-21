@@ -23,7 +23,7 @@ class BackupTransactionDto {
   @IsNumber()
   amount!: number;
 
-  @ApiProperty({ example: 'INCOME' })
+  @ApiProperty({ example: 'RECEITA' })
   @IsString()
   type!: string;
 
