@@ -18,7 +18,11 @@
 import { Injectable } from '@nestjs/common';
 import type { PaginatedResponse, PaginationDto } from '../../common/dto/pagination.dto';
 import { PrismaService } from '../../prisma/prisma.service';
-import type { CreateTransactionDto } from './dto/transaction.dto';
+import {
+  TransactionType,
+  type CreateTransactionDto,
+  type TransactionTypeInput,
+} from './dto/transaction.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -147,11 +151,13 @@ export class TransactionsService {
    * @param dto - Dados validados (CreateTransactionDto)
    */
   async create(userId: number, dto: CreateTransactionDto) {
+    const normalizedType = this.normalizeTransactionType(dto.type);
+
     return this.prisma.transaction.create({
       data: {
         title: dto.title,
         amount: dto.amount,
-        type: dto.type,
+        type: normalizedType,
         date: dto.date ? new Date(dto.date) : new Date(),
         ...(dto.categoryId ? { category: { connect: { id: Number(dto.categoryId) } } } : {}),
         user: {
@@ -174,12 +180,14 @@ export class TransactionsService {
    * Nota: Segurança de propriedade é validada no controller
    */
   async update(id: number, dto: CreateTransactionDto) {
+    const normalizedType = this.normalizeTransactionType(dto.type);
+
     return this.prisma.transaction.update({
       where: { id },
       data: {
         title: dto.title,
         amount: dto.amount,
-        type: dto.type,
+        type: normalizedType,
         date: dto.date ? new Date(dto.date) : new Date(),
         ...(dto.categoryId ? { category: { connect: { id: Number(dto.categoryId) } } } : {}),
       },
@@ -192,5 +200,12 @@ export class TransactionsService {
    */
   async delete(id: number) {
     return this.prisma.transaction.delete({ where: { id } });
+  }
+
+  private normalizeTransactionType(type: TransactionTypeInput): TransactionType {
+    if (type === 'RECEITA') return TransactionType.INCOME;
+    if (type === 'DESPESA') return TransactionType.EXPENSE;
+    if (type === 'TRANSFERENCIA') return TransactionType.TRANSFER;
+    return type;
   }
 }

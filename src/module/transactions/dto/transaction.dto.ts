@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,
-  IsEnum,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -16,6 +16,17 @@ export enum TransactionType {
   EXPENSE = 'EXPENSE', // Despesa / Pagamento
   TRANSFER = 'TRANSFER', // Transferência
 }
+
+export const TRANSACTION_TYPE_VALUES = [
+  TransactionType.INCOME,
+  TransactionType.EXPENSE,
+  TransactionType.TRANSFER,
+  'RECEITA',
+  'DESPESA',
+  'TRANSFERENCIA',
+] as const;
+
+export type TransactionTypeInput = (typeof TRANSACTION_TYPE_VALUES)[number];
 
 export class CreateTransactionDto {
   @ApiProperty({
@@ -37,13 +48,15 @@ export class CreateTransactionDto {
 
   @ApiProperty({
     description: 'O tipo de transação',
-    example: TransactionType.INCOME,
+    example: 'RECEITA',
+    enum: ['RECEITA', 'DESPESA', 'TRANSFERENCIA', 'INCOME', 'EXPENSE', 'TRANSFER'],
   })
-  @IsEnum(TransactionType, {
-    message: 'O tipo deve ser INCOME, EXPENSE ou TRANSFER',
+  @IsIn(TRANSACTION_TYPE_VALUES, {
+    message:
+      'O tipo deve ser RECEITA, DESPESA ou TRANSFERENCIA (também aceitamos INCOME, EXPENSE e TRANSFER).',
   })
   @IsNotEmpty({ message: 'O tipo de transação é obrigatório' })
-  type!: TransactionType;
+  type!: TransactionTypeInput;
 
   @ApiProperty({
     description: 'A descrição da transação',

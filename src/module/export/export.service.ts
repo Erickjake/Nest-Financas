@@ -2,6 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ReportFilterDto } from '../reports/dto/create-report.dto';
 
+type ExportTransaction = {
+  id: number;
+  title: string;
+  amount: number;
+  type: string;
+  date: Date;
+  category: { name: string } | null;
+};
+
 @Injectable()
 export class ExportService {
   constructor(private readonly prisma: PrismaService) {}
@@ -21,7 +30,7 @@ export class ExportService {
     });
   }
 
-  generateCsv(transactions: Record<string, unknown>[]): string {
+  generateCsv(transactions: ExportTransaction[]): string {
     const header = 'ID,Descrição,Valor,Tipo,Data,Categoria\n';
     const rows = transactions
       .map((t) => {
@@ -37,7 +46,7 @@ export class ExportService {
     return header + rows;
   }
 
-  async generatePdf(transactions: Record<string, unknown>[]): Promise<Buffer> {
+  async generatePdf(transactions: ExportTransaction[]): Promise<Buffer> {
     const PDFDocument = (await import('pdfkit')).default;
 
     return new Promise((resolve, reject) => {
