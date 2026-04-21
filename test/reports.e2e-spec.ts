@@ -122,7 +122,10 @@ describe('E2E - Reports (Relatórios)', () => {
     const dbUser = await prisma.user.findUnique({
       where: { email: testUser.email },
     });
-    userId = dbUser!.id;
+    if (!dbUser) {
+      throw new Error('Usuário de teste não encontrado após criação');
+    }
+    userId = dbUser.id;
   });
 
   // -------------------------------------------------------
@@ -290,6 +293,9 @@ describe('E2E - Reports (Relatórios)', () => {
       const dbOther = await prisma.user.findUnique({
         where: { email: otherUser.email },
       });
+      if (!dbOther) {
+        throw new Error('Outro usuário não encontrado após criação');
+      }
 
       // Criar transação para o OUTRO usuário (via Prisma)
       await prisma.transaction.create({
@@ -297,7 +303,7 @@ describe('E2E - Reports (Relatórios)', () => {
           title: 'Transação alheia',
           amount: 9999,
           type: 'INCOME',
-          userId: dbOther!.id, // Pertence ao outro
+          userId: dbOther.id, // Pertence ao outro
           date: new Date(),
         },
       });

@@ -1,8 +1,8 @@
-import { Controller, Get, UseGuards, Query, Request } from '@nestjs/common';
-import { ReportsService } from './reports.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ReportFilterDto } from './dto/create-report.dto';
+import { ReportsService } from './reports.service';
 
 @ApiTags('reports')
 @ApiBearerAuth()

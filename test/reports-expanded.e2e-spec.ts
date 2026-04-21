@@ -70,7 +70,10 @@ describe('E2E - Reports Expandidos', () => {
     const dbUser = await prisma.user.findUnique({
       where: { email: testUser.email },
     });
-    userId = dbUser!.id;
+    if (!dbUser) {
+      throw new Error('Usuário de teste não encontrado após criação');
+    }
+    userId = dbUser.id;
   });
 
   afterEach(async () => {
@@ -340,6 +343,9 @@ describe('E2E - Reports Expandidos', () => {
       const dbUserB = await prisma.user.findUnique({
         where: { email: userBData.email },
       });
+      if (!dbUserB) {
+        throw new Error('Usuário B não encontrado após criação');
+      }
 
       // User A tem R$1000 INCOME
       await prisma.transaction.create({
@@ -352,7 +358,7 @@ describe('E2E - Reports Expandidos', () => {
           title: 'Renda B',
           amount: 5000,
           type: 'INCOME',
-          userId: dbUserB!.id,
+          userId: dbUserB.id,
           date: new Date(),
         },
       });
@@ -392,6 +398,9 @@ describe('E2E - Reports Expandidos', () => {
       const dbUserB = await prisma.user.findUnique({
         where: { email: userBData.email },
       });
+      if (!dbUserB) {
+        throw new Error('Usuário B não encontrado após criação');
+      }
 
       // Cat e Txn de A
       const catA = await prisma.category.create({ data: { name: 'Cat A' } });
@@ -413,7 +422,7 @@ describe('E2E - Reports Expandidos', () => {
           title: 'Desp B',
           amount: 200,
           type: 'EXPENSE',
-          userId: dbUserB!.id,
+          userId: dbUserB.id,
           categoryId: catB.id,
           date: new Date(),
         },

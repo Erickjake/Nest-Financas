@@ -1,5 +1,5 @@
-import type { PrismaService } from '../../../prisma/prisma.service';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { PrismaService } from '../../../prisma/prisma.service';
 import { type CreateTransactionDto, TransactionType } from '../dto/transaction.dto';
 import { TransactionsService } from '../transactions.service';
 
