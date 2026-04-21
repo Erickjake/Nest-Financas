@@ -21,6 +21,8 @@ import type { LoginDto } from './dto/login.dto';
 // Mock do AuthService
 const authServiceMock = {
   signIn: vi.fn(),
+  refresh: vi.fn(),
+  logout: vi.fn(),
 };
 
 // Mock do Response Express
@@ -58,6 +60,7 @@ describe('AuthController', () => {
 
       authServiceMock.signIn.mockResolvedValue({
         access_token: jwtToken,
+        refresh_token: 'refresh.jwt.token',
       });
 
       // ACT
@@ -71,8 +74,8 @@ describe('AuthController', () => {
       // ASSERT - AuthService foi chamado com email e password
       expect(authServiceMock.signIn).toHaveBeenCalledWith(loginDto.email, loginDto.password);
 
-      // ASSERT - Cookie foi definido
-      expect(responseMock.cookie).toHaveBeenCalled();
+      // ASSERT - Cookies foram definidos (access + refresh)
+      expect(responseMock.cookie).toHaveBeenCalledTimes(2);
 
       // ASSERT - Cookie tem flags de segurança corretas
       const cookieCall = (responseMock.cookie as any).mock.calls[0];
@@ -83,8 +86,12 @@ describe('AuthController', () => {
       const cookieOptions = cookieCall[2];
       expect(cookieOptions.httpOnly).toBe(true); // Protege contra XSS
       expect(cookieOptions.sameSite).toBe('lax'); // Protege contra CSRF
-      expect(cookieOptions.maxAge).toBe(1000 * 60 * 60 * 24); // 1 dia
+      expect(cookieOptions.maxAge).toBe(1000 * 60 * 15); // 15 minutos
       // secure é dinâmico: true em prod, false em dev
+
+      const refreshCookieCall = (responseMock.cookie as any).mock.calls[1];
+      expect(refreshCookieCall[0]).toBe('refresh_token');
+      expect(refreshCookieCall[2].httpOnly).toBe(true);
     });
 
     /**
@@ -182,25 +189,54 @@ describe('AuthController', () => {
       };
 
       const jwtToken1 = 'eyJhbGciOiJIUzI1NiJ9.token1...';
-      authServiceMock.signIn.mockResolvedValue({ access_token: jwtToken1 });
+      authServiceMock.signIn.mockResolvedValueOnce({
+        access_token: jwtToken1,
+        refresh_token: 'refresh-token-1',
+      });
 
       // ACT - Primeiro login
       await authController.login(loginDto1, responseMock as unknown as Response);
 
       // ARRANGE - Segundo login (novo token)
       const jwtToken2 = 'eyJhbGciOiJIUzI1NiJ9.token2...';
-      authServiceMock.signIn.mockResolvedValue({ access_token: jwtToken2 });
+      authServiceMock.signIn.mockResolvedValueOnce({
+        access_token: jwtToken2,
+        refresh_token: 'refresh-token-2',
+      });
 
       // ACT - Segundo login
       await authController.login(loginDto1, responseMock as unknown as Response);
 
-      // ASSERT - Cookie foi definido 2x (uma por login)
-      expect(responseMock.cookie).toHaveBeenCalledTimes(2);
+      // ASSERT - Cookie foi definido 4x (2 por login: access + refresh)
+      expect(responseMock.cookie).toHaveBeenCalledTimes(4);
 
       // Tokens devem ser diferentes
       const call1Token = (responseMock.cookie as any).mock.calls[0][1];
-      const call2Token = (responseMock.cookie as any).mock.calls[1][1];
+      const call2Token = (responseMock.cookie as any).mock.calls[2][1];
       expect(call1Token).not.toBe(call2Token);
+    });
+  });
+
+  describe('POST /auth/refresh', () => {
+    it('deve renovar sessão e redefinir cookies', async () => {
+      authServiceMock.refresh.mockResolvedValue({
+        access_token: 'novo-access',
+        refresh_token: 'novo-refresh',
+      });
+
+      const reqMock = {
+        cookies: {
+          refresh_token: 'refresh-antigo',
+        },
+      } as any;
+
+      const resultado = await authController.refresh(reqMock, responseMock as unknown as Response);
+
+      expect(resultado).toEqual({ message: 'Sessão renovada com sucesso' });
+      expect(authServiceMock.refresh).toHaveBeenCalledWith('refresh-antigo');
+      expect(responseMock.cookie).toHaveBeenCalledTimes(2);
+      expect((responseMock.cookie as any).mock.calls[0][0]).toBe('access_token');
+      expect((responseMock.cookie as any).mock.calls[1][0]).toBe('refresh_token');
     });
   });
 
@@ -214,7 +250,8 @@ describe('AuthController', () => {
      */
     it('deve fazer logout e limpar cookie access_token', async () => {
       // ACT
-      const resultado = await authController.logout(responseMock as unknown as Response);
+      const reqMock = { cookies: { refresh_token: 'refresh-token' } } as any;
+      const resultado = await authController.logout(reqMock, responseMock as unknown as Response);
 
       // ASSERT - Resposta
       expect(resultado).toEqual({
@@ -222,7 +259,10 @@ describe('AuthController', () => {
       });
 
       // ASSERT - Cookie foi limpado
-      expect(responseMock.clearCookie).toHaveBeenCalledWith('access_token');
+      expect(responseMock.clearCookie).toHaveBeenCalledTimes(2);
+      expect((responseMock.clearCookie as any).mock.calls[0][0]).toBe('access_token');
+      expect((responseMock.clearCookie as any).mock.calls[1][0]).toBe('refresh_token');
+      expect(authServiceMock.logout).toHaveBeenCalledWith('refresh-token');
     });
 
     /**
@@ -235,7 +275,8 @@ describe('AuthController', () => {
       // Sem JWT válido seria passado
 
       // ACT
-      const resultado = await authController.logout(responseMock as unknown as Response);
+      const reqMock = { cookies: {} } as any;
+      const resultado = await authController.logout(reqMock, responseMock as unknown as Response);
 
       // ASSERT
       expect(resultado).toEqual({
@@ -244,6 +285,7 @@ describe('AuthController', () => {
 
       // ASSERT - clearCookie foi chamado mesmo sem JWT
       expect(responseMock.clearCookie).toHaveBeenCalled();
+      expect(authServiceMock.logout).toHaveBeenCalledWith(undefined);
     });
 
     /**
@@ -252,11 +294,13 @@ describe('AuthController', () => {
      */
     it('deve ser idempotente - múltiplos logouts funcionam', async () => {
       // ACT
-      await authController.logout(responseMock as unknown as Response);
-      await authController.logout(responseMock as unknown as Response);
+      const reqMock = { cookies: { refresh_token: 'refresh-token' } } as any;
+      await authController.logout(reqMock, responseMock as unknown as Response);
+      await authController.logout(reqMock, responseMock as unknown as Response);
 
       // ASSERT
-      expect(responseMock.clearCookie).toHaveBeenCalledTimes(2);
+      expect(responseMock.clearCookie).toHaveBeenCalledTimes(4);
+      expect(authServiceMock.logout).toHaveBeenCalledTimes(2);
     });
   });
 });

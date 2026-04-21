@@ -31,7 +31,7 @@ export class ExportController {
       'Content-Disposition': `attachment; filename="${filename}"`,
     });
     // BOM para Excel reconhecer UTF-8
-    res.send('\uFEFF' + csv);
+    res.send(`\uFEFF${csv}`);
   }
 
   @Get('pdf')

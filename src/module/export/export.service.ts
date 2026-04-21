@@ -24,7 +24,7 @@ export class ExportService {
   generateCsv(transactions: Record<string, unknown>[]): string {
     const header = 'ID,Descrição,Valor,Tipo,Data,Categoria\n';
     const rows = transactions
-      .map((t: any) => {
+      .map((t) => {
         const date = new Date(t.date).toISOString().split('T')[0];
         const categoryName = t.category?.name ?? 'Sem categoria';
         // Escapar aspas duplas em campos de texto
@@ -78,7 +78,7 @@ export class ExportService {
       let totalIncome = 0;
       let totalExpense = 0;
 
-      for (const t of transactions as any[]) {
+      for (const t of transactions) {
         if (doc.y > 700) {
           doc.addPage();
         }

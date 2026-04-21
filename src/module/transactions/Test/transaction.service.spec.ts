@@ -207,8 +207,18 @@ describe('TransactionsService', () => {
   describe('findAll()', () => {
     test('deve retornar todas as transações com dados de usuário', async () => {
       const mockTransactions = [
-        { id: 1, title: 'Salário', amount: 5000, user: { id: 1, name: 'Erick', email: 'e@e.com', createdAt: new Date() } },
-        { id: 2, title: 'Aluguel', amount: 1500, user: { id: 2, name: 'Maria', email: 'm@m.com', createdAt: new Date() } },
+        {
+          id: 1,
+          title: 'Salário',
+          amount: 5000,
+          user: { id: 1, name: 'Erick', email: 'e@e.com', createdAt: new Date() },
+        },
+        {
+          id: 2,
+          title: 'Aluguel',
+          amount: 1500,
+          user: { id: 2, name: 'Maria', email: 'm@m.com', createdAt: new Date() },
+        },
       ];
       prismaMock.transaction.findMany.mockResolvedValueOnce(mockTransactions);
 
