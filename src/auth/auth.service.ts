@@ -1,7 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { randomUUID } from 'node:crypto';
 import type { StringValue } from 'ms';
 import { UsersService } from '../module/users/users.service';
 

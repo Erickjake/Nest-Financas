@@ -11,24 +11,24 @@
  * Proteção contra: Brute force, DDoS, resource exhaustion, API abuse
  */
 
+import { randomUUID } from 'node:crypto';
 // app.module.ts
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { randomUUID } from 'node:crypto';
 import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { TransactionsModule } from './module/transactions/transactions.module';
-import { UsersModule } from './module/users/users.module';
-import { PrismaModule } from './prisma/prisma.module';
 import { BackupModule } from './module/backup/backup.module';
 import { BudgetsModule } from './module/budgets/budgets.module';
 import { CategoriesModule } from './module/categories/categories.module';
 import { ExportModule } from './module/export/export.module';
 import { ReportsModule } from './module/reports/reports.module';
+import { TransactionsModule } from './module/transactions/transactions.module';
+import { UsersModule } from './module/users/users.module';
 import { ObservabilityModule } from './observability/observability.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [

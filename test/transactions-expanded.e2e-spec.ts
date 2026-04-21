@@ -24,7 +24,6 @@ describe('E2E - Transactions Expanded', () => {
   let prisma: PrismaService;
   let uniqueSuffix: string;
   let authCookie: string;
-  let userId: number;
 
   /** Helper: cria usuário e faz login, retorna cookie */
   async function createAndLogin(suffix?: string) {
@@ -69,7 +68,6 @@ describe('E2E - Transactions Expanded', () => {
     // Criar usuário e logar para testes autenticados
     const auth = await createAndLogin();
     authCookie = auth.cookie;
-    userId = auth.userId;
   });
 
   afterEach(async () => {

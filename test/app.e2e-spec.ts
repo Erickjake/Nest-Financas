@@ -482,7 +482,6 @@ describe('E2E - Full Application Flow (e2e)', () => {
   // ============================================================
   describe('Transaction Update (PUT /transactions/:id)', () => {
     let authCookie: string;
-    let userId: number;
 
     /**
      * Setup: Criar usuário e fazer login antes de cada teste
@@ -490,12 +489,7 @@ describe('E2E - Full Application Flow (e2e)', () => {
      */
     beforeEach(async () => {
       // Signup — cria o usuário de teste
-      const signupRes = await request(app.getHttpServer())
-        .post('/users')
-        .send(testUser)
-        .expect(201);
-
-      userId = signupRes.body.id;
+      await request(app.getHttpServer()).post('/users').send(testUser).expect(201);
 
       // Login — obtém o cookie JWT
       const loginRes = await request(app.getHttpServer())
@@ -652,19 +646,13 @@ describe('E2E - Full Application Flow (e2e)', () => {
   // ============================================================
   describe('Transaction Delete (DELETE /transactions/:id)', () => {
     let authCookie: string;
-    let userId: number;
 
     /**
      * Setup: Criar usuário e fazer login antes de cada teste
      */
     beforeEach(async () => {
       // Signup
-      const signupRes = await request(app.getHttpServer())
-        .post('/users')
-        .send(testUser)
-        .expect(201);
-
-      userId = signupRes.body.id;
+      await request(app.getHttpServer()).post('/users').send(testUser).expect(201);
 
       // Login
       const loginRes = await request(app.getHttpServer())
@@ -781,7 +769,6 @@ describe('E2E - Full Application Flow (e2e)', () => {
   // ============================================================
   describe('Transaction Pagination (GET /transactions?page=&limit=)', () => {
     let authCookie: string;
-    let userId: number;
 
     /**
      * Setup: Criar usuário, logar e criar 15 transações para testar paginação
@@ -789,12 +776,7 @@ describe('E2E - Full Application Flow (e2e)', () => {
      */
     beforeEach(async () => {
       // Signup
-      const signupRes = await request(app.getHttpServer())
-        .post('/users')
-        .send(testUser)
-        .expect(201);
-
-      userId = signupRes.body.id;
+      await request(app.getHttpServer()).post('/users').send(testUser).expect(201);
 
       // Login
       const loginRes = await request(app.getHttpServer())

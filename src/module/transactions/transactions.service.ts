@@ -19,8 +19,8 @@ import { Injectable } from '@nestjs/common';
 import type { PaginatedResponse, PaginationDto } from '../../common/dto/pagination.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
-  TransactionType,
   type CreateTransactionDto,
+  TransactionType,
   type TransactionTypeInput,
 } from './dto/transaction.dto';
 
