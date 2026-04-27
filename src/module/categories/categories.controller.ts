@@ -1,5 +1,16 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiOperation, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -30,6 +41,8 @@ export class CategoriesController {
     status: 400,
     description: 'Dados inválidos (nome obrigatório ou formato incorreto).',
   })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiSecurity('cookie-auth')
   @Post()
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoriesService.create(createCategoryDto);
@@ -90,6 +103,8 @@ export class CategoriesController {
   @ApiResponse({ status: 200, description: 'Categoria atualizada com sucesso.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @ApiResponse({ status: 404, description: 'Categoria não encontrada.' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiSecurity('cookie-auth')
   @Patch(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() updateCategoryDto: UpdateCategoryDto) {
     return this.categoriesService.update(id, updateCategoryDto);
@@ -101,6 +116,8 @@ export class CategoriesController {
   })
   @ApiResponse({ status: 200, description: 'Categoria excluída com sucesso.' })
   @ApiResponse({ status: 404, description: 'Categoria não encontrada.' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiSecurity('cookie-auth')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.categoriesService.remove(id);

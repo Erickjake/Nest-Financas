@@ -1,5 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
@@ -37,9 +51,28 @@ export class UsersController {
     description: 'Lista de usuários retornada com sucesso.',
     schema: { example: [{ id: 1, name: 'João Silva', email: 'joao@email.com' }] },
   })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiSecurity('cookie-auth')
   @Get()
   async findAll() {
     return await this.usersService.findAll();
+  }
+
+  @ApiOperation({
+    summary: 'Retornar perfil do usuário autenticado',
+    description: 'Retorna os dados do usuário que está autenticado via JWT.',
+  })
+  @ApiSecurity('cookie-auth')
+  @ApiResponse({
+    status: 200,
+    description: 'Perfil do usuário autenticado.',
+    schema: { example: { id: 1, name: 'João Silva', email: 'joao@email.com' } },
+  })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  async findMe(@Req() req: Request & { user: { userId: number; email: string } }) {
+    return await this.usersService.findOne(req.user.userId);
   }
 
   @ApiOperation({
@@ -52,9 +85,11 @@ export class UsersController {
     schema: { example: { id: 1, name: 'João Silva', email: 'joao@email.com' } },
   })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiSecurity('cookie-auth')
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.usersService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.usersService.findOne(id);
   }
 
   @ApiOperation({
@@ -64,9 +99,18 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Usuário atualizado com sucesso.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiSecurity('cookie-auth')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req: Request & { user: { userId: number; email: string } },
+  ) {
+    if (req.user.userId !== id) {
+      throw new ForbiddenException('Você não tem permissão para editar este usuário');
+    }
+    return this.usersService.update(id, updateUserDto);
   }
 
   @ApiOperation({
@@ -75,8 +119,16 @@ export class UsersController {
   })
   @ApiResponse({ status: 200, description: 'Usuário deletado com sucesso.' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiSecurity('cookie-auth')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request & { user: { userId: number; email: string } },
+  ) {
+    if (req.user.userId !== id) {
+      throw new ForbiddenException('Você não tem permissão para deletar este usuário');
+    }
+    return this.usersService.remove(id);
   }
 }

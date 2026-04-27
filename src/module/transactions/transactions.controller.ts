@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -121,7 +122,7 @@ export class TransactionsController {
   })
   @ApiResponse({ status: 404, description: 'Transação não encontrada.' })
   @Get(':id')
-  async findOne(@Param('id') id: number, @Request() req) {
+  async findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
     const userId = Number(req.user.userId || req.user.sub);
     const transaction = await this.transactionsService.findOne(id);
 
@@ -146,7 +147,11 @@ export class TransactionsController {
   })
   @ApiResponse({ status: 404, description: 'Transação não encontrada.' })
   @Put(':id')
-  async update(@Param('id') id: number, @Body() dto: CreateTransactionDto, @Request() req) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateTransactionDto,
+    @Request() req,
+  ) {
     const userId = Number(req.user.userId || req.user.sub);
     const transaction = await this.transactionsService.findOne(id);
 
@@ -170,7 +175,7 @@ export class TransactionsController {
   })
   @ApiResponse({ status: 404, description: 'Transação não encontrada.' })
   @Delete(':id')
-  async delete(@Param('id') id: number, @Request() req) {
+  async delete(@Param('id', ParseIntPipe) id: number, @Request() req) {
     const userId = Number(req.user.userId || req.user.sub);
     const transaction = await this.transactionsService.findOne(id);
 
