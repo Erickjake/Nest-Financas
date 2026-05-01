@@ -8,6 +8,7 @@
  *    - Implementação: @nestjs/common ValidationPipe com 3 flags de segurança
  */
 import './tracing';
+import { EventEmitter } from 'node:events';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -16,6 +17,8 @@ import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+
+EventEmitter.defaultMaxListeners = Math.max(EventEmitter.defaultMaxListeners, 30);
 
 async function bootstrap() {
   try {
