@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Param,
   ParseIntPipe,
@@ -122,7 +121,7 @@ export class TransactionsController {
   })
   @ApiResponse({ status: 404, description: 'Transação não encontrada.' })
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  async findOne(@Param('id', ParseIntPipe) _id: number, @Request() req) {
     return req.resource;
   }
 
@@ -140,10 +139,7 @@ export class TransactionsController {
   })
   @ApiResponse({ status: 404, description: 'Transação não encontrada.' })
   @Put(':id')
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: CreateTransactionDto,
-  ) {
+  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: CreateTransactionDto) {
     return this.transactionsService.update(id, dto);
   }
 

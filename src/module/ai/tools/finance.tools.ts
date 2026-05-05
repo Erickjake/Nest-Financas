@@ -9,8 +9,14 @@ export const createFinanceTools = (prisma: PrismaService, userId: string) => {
     get_transactions: tool({
       description: 'Busca as transações do usuário com filtros opcionais de mês e ano.',
       inputSchema: z.object({
-        month: z.number().describe('O número do mês (1-12) para filtrar transações. Envie 0 se quiser buscar as mais recentes gerais.'),
-        year: z.number().describe('O ano completo (ex: 2026). Envie 0 se quiser buscar as mais recentes gerais.'),
+        month: z
+          .number()
+          .describe(
+            'O número do mês (1-12) para filtrar transações. Envie 0 se quiser buscar as mais recentes gerais.',
+          ),
+        year: z
+          .number()
+          .describe('O ano completo (ex: 2026). Envie 0 se quiser buscar as mais recentes gerais.'),
       }),
       execute: async ({ month, year }) => {
         const where: any = { userId: numericUserId, deletedAt: null };
@@ -89,7 +95,8 @@ export const createFinanceTools = (prisma: PrismaService, userId: string) => {
     }),
 
     get_balance_summary: tool({
-      description: 'Retorna o resumo financeiro do usuário: total de receitas, total de despesas e saldo do mês.',
+      description:
+        'Retorna o resumo financeiro do usuário: total de receitas, total de despesas e saldo do mês.',
       inputSchema: z.object({
         month: z.number().describe('O número do mês (1-12)'),
         year: z.number().describe('O ano completo (ex: 2026)'),
@@ -140,7 +147,8 @@ export const createFinanceTools = (prisma: PrismaService, userId: string) => {
     }),
 
     get_expense_by_category: tool({
-      description: 'Retorna o ranking de gastos agrupados por categoria no mês especificado, ordenado do maior para o menor.',
+      description:
+        'Retorna o ranking de gastos agrupados por categoria no mês especificado, ordenado do maior para o menor.',
       inputSchema: z.object({
         month: z.number().describe('O número do mês (1-12)'),
         year: z.number().describe('O ano completo (ex: 2026)'),

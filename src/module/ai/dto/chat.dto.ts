@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 export class MessageDto {
   @ApiProperty({
@@ -24,9 +31,7 @@ export class ChatDto {
   @ApiProperty({
     description: 'Histórico de mensagens da conversa. A última mensagem deve ser do usuário.',
     type: [MessageDto],
-    example: [
-      { role: 'user', content: 'Quanto eu gastei com Alimentação este mês?' },
-    ],
+    example: [{ role: 'user', content: 'Quanto eu gastei com Alimentação este mês?' }],
   })
   @IsArray()
   @ArrayMinSize(1)

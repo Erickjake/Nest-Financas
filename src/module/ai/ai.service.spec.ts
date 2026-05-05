@@ -35,9 +35,7 @@ describe('AiService', () => {
       const warnSpy = vi.spyOn((service as any).logger, 'warn');
       service.onModuleInit();
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('OPENAI_API_KEY'),
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('OPENAI_API_KEY'));
 
       if (originalKey) process.env.OPENAI_API_KEY = originalKey;
     });
@@ -64,9 +62,9 @@ describe('AiService', () => {
       const originalKey = process.env.OPENAI_API_KEY;
       delete process.env.OPENAI_API_KEY;
 
-      await expect(
-        service.chat('1', [{ role: 'user', content: 'Olá' }]),
-      ).rejects.toThrow(InternalServerErrorException);
+      await expect(service.chat('1', [{ role: 'user', content: 'Olá' }])).rejects.toThrow(
+        InternalServerErrorException,
+      );
 
       if (originalKey) process.env.OPENAI_API_KEY = originalKey;
     });
@@ -108,9 +106,9 @@ describe('AiService', () => {
       const mockedGenerateText = vi.mocked(generateText);
       mockedGenerateText.mockRejectedValueOnce(new Error('API Error'));
 
-      await expect(
-        service.chat('1', [{ role: 'user', content: 'Olá' }]),
-      ).rejects.toThrow(InternalServerErrorException);
+      await expect(service.chat('1', [{ role: 'user', content: 'Olá' }])).rejects.toThrow(
+        InternalServerErrorException,
+      );
 
       if (originalKey) {
         process.env.OPENAI_API_KEY = originalKey;
@@ -125,9 +123,9 @@ describe('AiService', () => {
       const originalKey = process.env.OPENAI_API_KEY;
       delete process.env.OPENAI_API_KEY;
 
-      expect(() =>
-        service.chatStream('1', [{ role: 'user', content: 'Olá' }]),
-      ).toThrow(InternalServerErrorException);
+      expect(() => service.chatStream('1', [{ role: 'user', content: 'Olá' }])).toThrow(
+        InternalServerErrorException,
+      );
 
       if (originalKey) process.env.OPENAI_API_KEY = originalKey;
     });
@@ -139,7 +137,9 @@ describe('AiService', () => {
       const { streamText } = await import('ai');
       const mockedStreamText = vi.mocked(streamText);
       mockedStreamText.mockReturnValueOnce({
-        textStream: (async function* () { yield 'chunk'; })(),
+        textStream: (async function* () {
+          yield 'chunk';
+        })(),
       } as any);
 
       const messages = [{ role: 'user' as const, content: 'Olá' }];
