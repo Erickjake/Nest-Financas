@@ -18,11 +18,13 @@ export class AuthService {
   ) {}
 
   private getAccessSecret() {
-    return process.env.JWT_SECRET || 'CHAVE_SUPER_SECRETA';
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not defined');
+    return process.env.JWT_SECRET;
   }
 
   private getRefreshSecret() {
-    return process.env.JWT_REFRESH_SECRET || this.getAccessSecret();
+    if (!process.env.JWT_REFRESH_SECRET) throw new Error('JWT_REFRESH_SECRET is not defined');
+    return process.env.JWT_REFRESH_SECRET;
   }
 
   private getAccessExpiresIn(): number | StringValue {

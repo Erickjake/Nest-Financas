@@ -37,6 +37,7 @@ export class TransactionsService {
    */
   async findAll() {
     return this.prisma.transaction.findMany({
+      where: { deletedAt: null },
       include: {
         user: {
           select: {
@@ -130,7 +131,7 @@ export class TransactionsService {
    */
   async findAllByUser(userId: number) {
     return this.prisma.transaction.findMany({
-      where: { userId }, // Filtro de segurança: apenas este usuário
+      where: { userId, deletedAt: null }, // Filtro de segurança: apenas este usuário e ativo
       include: {
         user: {
           select: {
@@ -172,7 +173,7 @@ export class TransactionsService {
    * Nota: Segurança de propriedade é validada via OwnershipGuard no controller
    */
   async findOne(id: number) {
-    return this.prisma.transaction.findUnique({ where: { id } });
+    return this.prisma.transaction.findFirst({ where: { id, deletedAt: null } });
   }
 
   /**
@@ -199,7 +200,10 @@ export class TransactionsService {
    * Nota: Soft delete pode ser implementado se necessário (adicionar deletedAt)
    */
   async delete(id: number) {
-    return this.prisma.transaction.delete({ where: { id } });
+    return this.prisma.transaction.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 
   private normalizeTransactionType(type: TransactionTypeInput): TransactionType {

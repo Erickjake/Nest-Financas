@@ -15,7 +15,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { OwnershipGuard } from '../../common/guards/ownership.guard';
+import { TransactionOwnershipGuard } from '../../common/guards/ownership.guard';
 import { CreateTransactionDto } from './dto/transaction.dto';
 import { TransactionsService } from './transactions.service';
 
@@ -95,7 +95,7 @@ export class TransactionsController {
     return this.transactionsService.create(userId, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'), OwnershipGuard)
+  @UseGuards(AuthGuard('jwt'), TransactionOwnershipGuard)
   @ApiOperation({
     summary: 'Buscar transação por ID',
     description: 'Retorna uma transação específica. O usuário deve ser o dono da transação.',
@@ -123,17 +123,10 @@ export class TransactionsController {
   @ApiResponse({ status: 404, description: 'Transação não encontrada.' })
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    const userId = Number(req.user.userId || req.user.sub);
-    const transaction = await this.transactionsService.findOne(id);
-
-    if (!transaction || transaction.userId !== userId) {
-      throw new ForbiddenException('Você não tem permissão para acessar esta transação');
-    }
-
-    return transaction;
+    return req.resource;
   }
 
-  @UseGuards(AuthGuard('jwt'), OwnershipGuard)
+  @UseGuards(AuthGuard('jwt'), TransactionOwnershipGuard)
   @ApiOperation({
     summary: 'Atualizar transação por ID',
     description: 'Atualiza os dados de uma transação existente. O usuário deve ser o dono.',
@@ -150,19 +143,11 @@ export class TransactionsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateTransactionDto,
-    @Request() req,
   ) {
-    const userId = Number(req.user.userId || req.user.sub);
-    const transaction = await this.transactionsService.findOne(id);
-
-    if (!transaction || transaction.userId !== userId) {
-      throw new ForbiddenException('Você não tem permissão para modificar esta transação');
-    }
-
     return this.transactionsService.update(id, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'), OwnershipGuard)
+  @UseGuards(AuthGuard('jwt'), TransactionOwnershipGuard)
   @ApiOperation({
     summary: 'Deletar transação por ID',
     description: 'Remove uma transação (soft delete). O usuário deve ser o dono.',
@@ -175,14 +160,7 @@ export class TransactionsController {
   })
   @ApiResponse({ status: 404, description: 'Transação não encontrada.' })
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    const userId = Number(req.user.userId || req.user.sub);
-    const transaction = await this.transactionsService.findOne(id);
-
-    if (!transaction || transaction.userId !== userId) {
-      throw new ForbiddenException('Você não tem permissão para deletar esta transação');
-    }
-
+  async delete(@Param('id', ParseIntPipe) id: number) {
     return this.transactionsService.delete(id);
   }
 }

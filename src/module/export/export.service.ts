@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ReportFilterDto } from '../reports/dto/create-report.dto';
+import { buildDateFilter } from '../../common/utils/date-filter.util';
 
 type ExportTransaction = {
   id: number;
@@ -16,7 +17,7 @@ export class ExportService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getTransactions(userId: number, filter: ReportFilterDto) {
-    const dateFilter = this.buildDateFilter(filter);
+    const dateFilter = buildDateFilter(filter);
     return this.prisma.transaction.findMany({
       where: {
         userId,
@@ -123,10 +124,4 @@ export class ExportService {
     });
   }
 
-  private buildDateFilter(filter: ReportFilterDto) {
-    const dateFilter: Record<string, Date> = {};
-    if (filter.startDate) dateFilter.gte = new Date(filter.startDate);
-    if (filter.endDate) dateFilter.lte = new Date(filter.endDate);
-    return Object.keys(dateFilter).length ? dateFilter : undefined;
-  }
 }

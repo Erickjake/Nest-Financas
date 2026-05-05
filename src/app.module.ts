@@ -20,6 +20,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { AiModule } from './module/ai/ai.module';
 import { BackupModule } from './module/backup/backup.module';
 import { BudgetsModule } from './module/budgets/budgets.module';
 import { CategoriesModule } from './module/categories/categories.module';
@@ -107,6 +108,7 @@ import { PrismaModule } from './prisma/prisma.module';
     ExportModule,
     BackupModule,
     ObservabilityModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
