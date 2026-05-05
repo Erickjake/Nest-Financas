@@ -17,6 +17,10 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
+const isProduction = process.env.NODE_ENV === 'production';
+const loginThrottleLimit = Number(process.env.LOGIN_THROTTLE_LIMIT ?? (isProduction ? 3 : 20));
+const loginThrottleTtlMs = Number(process.env.LOGIN_THROTTLE_TTL_MS ?? 60000);
+
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -77,7 +81,7 @@ export class AuthController {
     status: 429,
     description: 'Excedeu o limite de 3 tentativas/minuto. Aguarde para tentar novamente.',
   })
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Throttle({ default: { limit: loginThrottleLimit, ttl: loginThrottleTtlMs } })
   @Post('login')
   @HttpCode(200)
   async login(@Body() credentials: LoginDto, @Res({ passthrough: true }) res: Response) {

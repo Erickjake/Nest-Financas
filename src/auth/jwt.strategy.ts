@@ -6,13 +6,15 @@ import { Strategy } from 'passport-jwt';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not defined');
+
     super({
       // 💡 O segredo: extraímos o JWT de dentro do cookie chamado 'access_token'
       jwtFromRequest: (req: Request) => {
         return req?.cookies?.access_token || null;
       },
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'CHAVE_SUPER_SECRETA',
+      secretOrKey: process.env.JWT_SECRET,
     });
   }
 

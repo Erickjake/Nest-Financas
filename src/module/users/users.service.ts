@@ -29,13 +29,14 @@ export class UsersService {
   }
 
   async findAll() {
-    return await this.prisma.user.findMany({ omit: { password: true } });
+    return await this.prisma.user.findMany({ where: { deletedAt: null }, omit: { password: true } });
   }
 
   async findOne(id: number) {
-    const data = await this.prisma.user.findUnique({
+    const data = await this.prisma.user.findFirst({
       where: {
         id,
+        deletedAt: null,
       },
       omit: { password: true },
     });
@@ -54,18 +55,20 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    const data = await this.prisma.user.delete({
+    const data = await this.prisma.user.update({
       where: {
         id,
       },
+      data: { deletedAt: new Date() },
       omit: { password: true },
     });
     return data;
   }
   async findByEmail(email: string) {
-    return await this.prisma.user.findUnique({
+    return await this.prisma.user.findFirst({
       where: {
         email,
+        deletedAt: null,
       },
     });
   }

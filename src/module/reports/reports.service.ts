@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ReportFilterDto } from './dto/create-report.dto';
+import { buildDateFilter } from '../../common/utils/date-filter.util';
 @Injectable()
 export class ReportsService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getSummary(userId: number, filter: ReportFilterDto) {
-    const dateFilter = this.buildDateFilter(filter);
+    const dateFilter = buildDateFilter(filter);
     const [incomeResult, expenseResult] = await Promise.all([
       this.prismaService.transaction.aggregate({
         where: { userId, type: 'INCOME', deletedAt: null, ...(dateFilter && { date: dateFilter }) },
@@ -31,7 +32,7 @@ export class ReportsService {
   }
 
   async getByCategory(userId: number, filter: ReportFilterDto) {
-    const dateFilter = this.buildDateFilter(filter);
+    const dateFilter = buildDateFilter(filter);
     const result = await this.prismaService.transaction.groupBy({
       by: ['categoryId'],
       where: { userId, type: 'EXPENSE', deletedAt: null, ...(dateFilter && { date: dateFilter }) },
@@ -57,7 +58,7 @@ export class ReportsService {
   }
 
   async getMonthly(userId: number, filter: ReportFilterDto) {
-    const dateFilter = this.buildDateFilter(filter);
+    const dateFilter = buildDateFilter(filter);
     const result = await this.prismaService.transaction.findMany({
       where: { userId, deletedAt: null, ...(dateFilter && { date: dateFilter }) },
       select: { amount: true, type: true, date: true },
@@ -71,11 +72,5 @@ export class ReportsService {
       monthlyMap.set(key, entry);
     }
     return Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month));
-  }
-  private buildDateFilter(filter: ReportFilterDto) {
-    const dateFilter: Record<string, Date> = {};
-    if (filter.startDate) dateFilter.gte = new Date(filter.startDate);
-    if (filter.endDate) dateFilter.lte = new Date(filter.endDate);
-    return Object.keys(dateFilter).length ? dateFilter : undefined;
   }
 }

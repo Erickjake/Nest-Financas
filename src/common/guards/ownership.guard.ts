@@ -36,7 +36,7 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import type { TransactionsService } from '../../module/transactions/transactions.service';
+import { TransactionsService } from '../../module/transactions/transactions.service';
 
 /**
  * ✅ OwnershipGuard (básico) - Apenas valida que user está autenticado

@@ -181,6 +181,36 @@ Orcamentos (protegidos):
 - PATCH /budgets/:id
 - DELETE /budgets/:id
 
+### Payload do POST /budgets
+
+Formato atual (recomendado):
+
+```json
+{
+  "amount": 1200,
+  "month": 4,
+  "year": 2026,
+  "alertThreshold": 80,
+  "categoryId": 1
+}
+```
+
+Compatibilidade com formato legado (a API converte automaticamente):
+
+```json
+{
+  "title": "Orcamento Casa",
+  "targetAmount": 1200,
+  "dueDate": "2026-04-21"
+}
+```
+
+Notas de compatibilidade:
+
+- `targetAmount` e `currentAmount` sao aceitos como alias de `amount`.
+- `dueDate` e usado para derivar `month` e `year` quando nao enviados.
+- `title` e aceito apenas para retrocompatibilidade e e ignorado no processamento.
+
 Relatorios (protegidos):
 
 - GET /reports/summary
