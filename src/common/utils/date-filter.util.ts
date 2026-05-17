@@ -15,8 +15,8 @@ export function buildDateFilter(filter: {
   if (filter.DATA && !filter.startDate && !filter.endDate) {
     if (/^\d{4}-\d{2}$/.test(filter.DATA)) {
       const [year, month] = filter.DATA.split('-');
-      const start = new Date(Number(year), Number(month) - 1, 1);
-      const end = new Date(Number(year), Number(month), 0, 23, 59, 59, 999);
+      const start = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+      const end = new Date(Date.UTC(Number(year), Number(month), 0, 23, 59, 59, 999));
       dateFilter.gte = start;
       dateFilter.lte = end;
     } else {
