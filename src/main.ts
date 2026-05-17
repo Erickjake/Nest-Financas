@@ -102,6 +102,7 @@ async function bootstrap() {
       .addTag('categories', 'Gerenciamento de Categorias')
       .addTag('reports', 'Relatórios Financeiros')
       .addTag('budgets', 'Orçamentos Mensais')
+      .addTag('goals', 'Metas Financeiras')
       .addTag('export', 'Exportação de Dados (CSV/PDF)')
       .addTag('backup', 'Backup e Restauração')
       .build();
