@@ -24,7 +24,8 @@ export class AuthService {
   }
 
   private getRefreshSecret() {
-    if (!process.env.JWT_REFRESH_SECRET) throw new Error('JWT_REFRESH_SECRET is not defined');
+    if (!process.env.JWT_REFRESH_SECRET)
+      throw new Error('JWT_REFRESH_SECRET is not defined');
     return process.env.JWT_REFRESH_SECRET;
   }
 
@@ -33,7 +34,9 @@ export class AuthService {
   }
 
   private getRefreshExpiresIn(): number | StringValue {
-    return (process.env.JWT_REFRESH_EXPIRES_IN as StringValue | undefined) || '7d';
+    return (
+      (process.env.JWT_REFRESH_EXPIRES_IN as StringValue | undefined) || '7d'
+    );
   }
 
   private async generateAuthTokens(payload: AuthTokenPayload) {
@@ -93,11 +96,16 @@ export class AuthService {
     }
 
     let payload: AuthTokenPayload;
+    // Hoist outside try-catch so config errors propagate as 500, not 401
+    const refreshSecret = this.getRefreshSecret();
 
     try {
-      payload = await this.jwtService.verifyAsync<AuthTokenPayload>(refreshToken, {
-        secret: this.getRefreshSecret(),
-      });
+      payload = await this.jwtService.verifyAsync<AuthTokenPayload>(
+        refreshToken,
+        {
+          secret: refreshSecret,
+        },
+      );
     } catch {
       throw new UnauthorizedException('Refresh token inválido');
     }
@@ -111,7 +119,10 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token revogado');
     }
 
-    const isRefreshTokenMatch = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+    const isRefreshTokenMatch = await bcrypt.compare(
+      refreshToken,
+      user.refreshTokenHash,
+    );
     if (!isRefreshTokenMatch) {
       throw new UnauthorizedException('Refresh token inválido');
     }
@@ -131,17 +142,26 @@ export class AuthService {
       return;
     }
 
+    // Hoist outside try-catch so config errors propagate, not get silently swallowed
+    const refreshSecret = this.getRefreshSecret();
+
     try {
-      const payload = await this.jwtService.verifyAsync<AuthTokenPayload>(refreshToken, {
-        secret: this.getRefreshSecret(),
-      });
+      const payload = await this.jwtService.verifyAsync<AuthTokenPayload>(
+        refreshToken,
+        {
+          secret: refreshSecret,
+        },
+      );
 
       const user = await this.usersService.findByEmail(payload.email);
       if (!user || user.id !== payload.sub || !user.refreshTokenHash) {
         return;
       }
 
-      const isRefreshTokenMatch = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+      const isRefreshTokenMatch = await bcrypt.compare(
+        refreshToken,
+        user.refreshTokenHash,
+      );
       if (!isRefreshTokenMatch) {
         return;
       }

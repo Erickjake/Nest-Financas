@@ -64,7 +64,9 @@ describe('AuthService', () => {
       password: await (await import('bcrypt')).hash('SecurePass123', 10),
     });
 
-    jwtMock.signAsync.mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+    jwtMock.signAsync
+      .mockResolvedValueOnce('access-token')
+      .mockResolvedValueOnce('refresh-token');
 
     const result = await service.signIn('joao@test.com', 'SecurePass123');
 
@@ -104,7 +106,9 @@ describe('AuthService', () => {
   it('falha no refresh quando token é inválido', async () => {
     jwtMock.verifyAsync.mockRejectedValue(new Error('invalid'));
 
-    await expect(service.refresh('invalid-token')).rejects.toThrow(UnauthorizedException);
+    await expect(service.refresh('invalid-token')).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('falha no refresh quando hash persistido não confere', async () => {
@@ -116,7 +120,9 @@ describe('AuthService', () => {
       refreshTokenHash: await (await import('bcrypt')).hash('outro-token', 10),
     });
 
-    await expect(service.refresh('valid-refresh-token')).rejects.toThrow(UnauthorizedException);
+    await expect(service.refresh('valid-refresh-token')).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('revoga refresh token no logout quando token válido', async () => {
