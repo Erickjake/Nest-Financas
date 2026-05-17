@@ -152,6 +152,43 @@ GET {{baseUrl}}/budgets/status?month=4&year=2026
 Cookie: access_token={{accessTokenCookie}}
 
 ### ======================
+### METAS (PROTEGIDAS)
+### ======================
+
+### Criar meta
+POST {{baseUrl}}/goals
+Content-Type: application/json
+Cookie: access_token={{accessTokenCookie}}
+
+{
+  "title": "Reserva de Emergência",
+  "targetAmount": 10000,
+  "currentAmount": 2500,
+  "dueDate": "2026-12-31"
+}
+
+### Listar metas
+GET {{baseUrl}}/goals
+Cookie: access_token={{accessTokenCookie}}
+
+### Buscar meta por ID
+GET {{baseUrl}}/goals/1
+Cookie: access_token={{accessTokenCookie}}
+
+### Atualizar meta
+PATCH {{baseUrl}}/goals/1
+Content-Type: application/json
+Cookie: access_token={{accessTokenCookie}}
+
+{
+  "currentAmount": 3000
+}
+
+### Deletar meta (soft delete)
+DELETE {{baseUrl}}/goals/1
+Cookie: access_token={{accessTokenCookie}}
+
+### ======================
 ### RELATÓRIOS (PROTEGIDOS)
 ### ======================
 

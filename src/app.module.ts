@@ -25,6 +25,7 @@ import { BackupModule } from './module/backup/backup.module';
 import { BudgetsModule } from './module/budgets/budgets.module';
 import { CategoriesModule } from './module/categories/categories.module';
 import { ExportModule } from './module/export/export.module';
+import { GoalsModule } from './module/goals/goals.module';
 import { ReportsModule } from './module/reports/reports.module';
 import { TransactionsModule } from './module/transactions/transactions.module';
 import { UsersModule } from './module/users/users.module';
@@ -105,6 +106,7 @@ import { PrismaModule } from './prisma/prisma.module';
     CategoriesModule,
     ReportsModule,
     BudgetsModule,
+    GoalsModule,
     ExportModule,
     BackupModule,
     ObservabilityModule,

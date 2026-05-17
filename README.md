@@ -269,6 +269,10 @@ Authorization: Bearer <token>
 
 Use o arquivo api_test.http para testar rapidamente todos os fluxos.
 
+Guia de integracao do frontend para Metas (Goals):
+
+- README_GOALS_FRONTEND.md
+
 Ele ja contem:
 
 - Variaveis de ambiente para baseUrl e cookies

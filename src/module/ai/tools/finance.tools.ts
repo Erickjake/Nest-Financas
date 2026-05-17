@@ -1,5 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import type { Prisma } from '../../../../generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 export const createFinanceTools = (prisma: PrismaService, userId: string) => {
@@ -19,7 +20,10 @@ export const createFinanceTools = (prisma: PrismaService, userId: string) => {
           .describe('O ano completo (ex: 2026). Envie 0 se quiser buscar as mais recentes gerais.'),
       }),
       execute: async ({ month, year }) => {
-        const where: any = { userId: numericUserId, deletedAt: null };
+        const where: Prisma.TransactionWhereInput = {
+          userId: numericUserId,
+          deletedAt: null,
+        };
 
         if (month && year) {
           const startDate = new Date(year, month - 1, 1);

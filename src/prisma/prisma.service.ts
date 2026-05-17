@@ -1,5 +1,5 @@
 // src/prisma/prisma.service.ts
-import 'dotenv/config'; // 1. Garante que o NestJS leia a sua DATABASE_URL do arquivo .env
+import '../env';
 import { Injectable, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg'; // Importa o adaptador oficial do Prisma
 import { Pool } from 'pg'; // Importa o motor de conexão real do PostgreSQL
