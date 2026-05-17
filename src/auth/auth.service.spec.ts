@@ -4,22 +4,40 @@
 
 import { UnauthorizedException } from '@nestjs/common';
 import type { JwtService } from '@nestjs/jwt';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UsersService } from '../module/users/users.service';
 import { AuthService } from './auth.service';
 
 const usersMock = { findByEmail: vi.fn(), setRefreshTokenHash: vi.fn() };
 const jwtMock = { signAsync: vi.fn(), verifyAsync: vi.fn() };
+const originalJwtSecret = process.env.JWT_SECRET;
+const originalJwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
 
 describe('AuthService', () => {
   let service: AuthService;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.JWT_SECRET = 'test-access-secret';
+    process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
     service = new AuthService(
       usersMock as unknown as UsersService,
       jwtMock as unknown as JwtService,
     );
+  });
+
+  afterAll(() => {
+    if (originalJwtSecret === undefined) {
+      delete process.env.JWT_SECRET;
+    } else {
+      process.env.JWT_SECRET = originalJwtSecret;
+    }
+
+    if (originalJwtRefreshSecret === undefined) {
+      delete process.env.JWT_REFRESH_SECRET;
+    } else {
+      process.env.JWT_REFRESH_SECRET = originalJwtRefreshSecret;
+    }
   });
 
   it('rejeita login com email inválido', async () => {

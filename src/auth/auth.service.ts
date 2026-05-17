@@ -3,6 +3,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import type { StringValue } from 'ms';
+import '../env';
 import { UsersService } from '../module/users/users.service';
 
 type AuthTokenPayload = {

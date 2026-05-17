@@ -7,6 +7,7 @@
  *    - Resposta padrão: HTTP 400 Bad Request com mensagens em português
  *    - Implementação: @nestjs/common ValidationPipe com 3 flags de segurança
  */
+import './env';
 import './tracing';
 import { EventEmitter } from 'node:events';
 import { ValidationPipe } from '@nestjs/common';
