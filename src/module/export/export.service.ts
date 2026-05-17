@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { buildDateFilter } from '../../common/utils/date-filter.util';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ReportFilterDto } from '../reports/dto/create-report.dto';
-import { buildDateFilter } from '../../common/utils/date-filter.util';
 
 type ExportTransaction = {
   id: number;
@@ -123,5 +123,4 @@ export class ExportService {
       doc.end();
     });
   }
-
 }

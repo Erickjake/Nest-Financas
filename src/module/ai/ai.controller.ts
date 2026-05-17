@@ -38,11 +38,7 @@ export class AiController {
   })
   @ApiResponse({ status: 200, description: 'Stream de texto da IA via SSE' })
   @ApiResponse({ status: 429, description: 'Limite de requisições excedido (10/min)' })
-  async chatStream(
-    @Req() req: any,
-    @Body() chatDto: ChatDto,
-    @Res() res: Response,
-  ) {
+  async chatStream(@Req() req: any, @Body() chatDto: ChatDto, @Res() res: Response) {
     const userId = Number(req.user.userId || req.user.sub);
     const result = this.aiService.chatStream(userId.toString(), chatDto.messages);
 

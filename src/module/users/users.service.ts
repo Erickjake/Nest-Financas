@@ -29,7 +29,10 @@ export class UsersService {
   }
 
   async findAll() {
-    return await this.prisma.user.findMany({ where: { deletedAt: null }, omit: { password: true } });
+    return await this.prisma.user.findMany({
+      where: { deletedAt: null },
+      omit: { password: true },
+    });
   }
 
   async findOne(id: number) {

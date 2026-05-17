@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { buildDateFilter } from '../../common/utils/date-filter.util';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ReportFilterDto } from './dto/create-report.dto';
-import { buildDateFilter } from '../../common/utils/date-filter.util';
 @Injectable()
 export class ReportsService {
   constructor(private readonly prismaService: PrismaService) {}

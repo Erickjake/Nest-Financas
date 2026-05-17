@@ -1,6 +1,6 @@
 import { createGroq } from '@ai-sdk/groq';
 import { Injectable, InternalServerErrorException, Logger, OnModuleInit } from '@nestjs/common';
-import { type ModelMessage, generateText, stepCountIs, streamText } from 'ai';
+import { generateText, type ModelMessage, stepCountIs, streamText } from 'ai';
 import { PrismaService } from '../../prisma/prisma.service';
 import { createFinanceTools } from './tools/finance.tools';
 

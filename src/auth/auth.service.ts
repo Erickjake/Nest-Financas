@@ -1,9 +1,9 @@
-import { randomUUID } from 'node:crypto';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import type { StringValue } from 'ms';
-import { UsersService } from '../module/users/users.service';
+import { randomUUID } from "node:crypto";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcrypt";
+import type { StringValue } from "ms";
+import { UsersService } from "../module/users/users.service";
 
 type AuthTokenPayload = {
   sub: number;
@@ -18,21 +18,24 @@ export class AuthService {
   ) {}
 
   private getAccessSecret() {
-    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not defined');
+    if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not defined");
     return process.env.JWT_SECRET;
   }
 
   private getRefreshSecret() {
-    if (!process.env.JWT_REFRESH_SECRET) throw new Error('JWT_REFRESH_SECRET is not defined');
+    if (!process.env.JWT_REFRESH_SECRET)
+      throw new Error("JWT_REFRESH_SECRET is not defined");
     return process.env.JWT_REFRESH_SECRET;
   }
 
   private getAccessExpiresIn(): number | StringValue {
-    return (process.env.JWT_EXPIRES_IN as StringValue | undefined) || '15m';
+    return (process.env.JWT_EXPIRES_IN as StringValue | undefined) || "15m";
   }
 
   private getRefreshExpiresIn(): number | StringValue {
-    return (process.env.JWT_REFRESH_EXPIRES_IN as StringValue | undefined) || '7d';
+    return (
+      (process.env.JWT_REFRESH_EXPIRES_IN as StringValue | undefined) || "7d"
+    );
   }
 
   private async generateAuthTokens(payload: AuthTokenPayload) {
@@ -62,7 +65,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      throw new UnauthorizedException('E-mail ou senha inválidos');
+      throw new UnauthorizedException("E-mail ou senha inválidos");
     }
 
     // 2. Verifica se o usuário existe e se a senha bate com o hash salvo
@@ -70,7 +73,7 @@ export class AuthService {
 
     if (!isMatch) {
       // Se a senha estiver errada, lançamos um erro 401 (Unauthorized)
-      throw new UnauthorizedException('E-mail ou senha inválidos');
+      throw new UnauthorizedException("E-mail ou senha inválidos");
     }
 
     // 3. Prepara o payload dos tokens
@@ -88,31 +91,39 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token ausente');
+      throw new UnauthorizedException("Refresh token ausente");
     }
 
     let payload: AuthTokenPayload;
+    // Hoist outside try-catch so config errors propagate as 500, not 401
+    const refreshSecret = this.getRefreshSecret();
 
     try {
-      payload = await this.jwtService.verifyAsync<AuthTokenPayload>(refreshToken, {
-        secret: this.getRefreshSecret(),
-      });
+      payload = await this.jwtService.verifyAsync<AuthTokenPayload>(
+        refreshToken,
+        {
+          secret: refreshSecret,
+        },
+      );
     } catch {
-      throw new UnauthorizedException('Refresh token inválido');
+      throw new UnauthorizedException("Refresh token inválido");
     }
 
     const user = await this.usersService.findByEmail(payload.email);
     if (!user || user.id !== payload.sub) {
-      throw new UnauthorizedException('Usuário inválido para refresh token');
+      throw new UnauthorizedException("Usuário inválido para refresh token");
     }
 
     if (!user.refreshTokenHash) {
-      throw new UnauthorizedException('Refresh token revogado');
+      throw new UnauthorizedException("Refresh token revogado");
     }
 
-    const isRefreshTokenMatch = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+    const isRefreshTokenMatch = await bcrypt.compare(
+      refreshToken,
+      user.refreshTokenHash,
+    );
     if (!isRefreshTokenMatch) {
-      throw new UnauthorizedException('Refresh token inválido');
+      throw new UnauthorizedException("Refresh token inválido");
     }
 
     const tokens = await this.generateAuthTokens({
@@ -130,17 +141,26 @@ export class AuthService {
       return;
     }
 
+    // Hoist outside try-catch so config errors propagate, not get silently swallowed
+    const refreshSecret = this.getRefreshSecret();
+
     try {
-      const payload = await this.jwtService.verifyAsync<AuthTokenPayload>(refreshToken, {
-        secret: this.getRefreshSecret(),
-      });
+      const payload = await this.jwtService.verifyAsync<AuthTokenPayload>(
+        refreshToken,
+        {
+          secret: refreshSecret,
+        },
+      );
 
       const user = await this.usersService.findByEmail(payload.email);
       if (!user || user.id !== payload.sub || !user.refreshTokenHash) {
         return;
       }
 
-      const isRefreshTokenMatch = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+      const isRefreshTokenMatch = await bcrypt.compare(
+        refreshToken,
+        user.refreshTokenHash,
+      );
       if (!isRefreshTokenMatch) {
         return;
       }
